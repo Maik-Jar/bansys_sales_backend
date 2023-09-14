@@ -1,4 +1,3 @@
 env
-*.sqlite3
-*.code-workspace
-invoice.json
+db.sqlite3
+bansysSales.code-workspace
