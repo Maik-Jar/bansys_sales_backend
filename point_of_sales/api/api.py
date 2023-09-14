@@ -1,6 +1,9 @@
 from rest_framework import permissions, filters, generics, status
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
+from django.db.transaction import atomic
 from .. import models
 from . import serializers
 
@@ -314,7 +317,8 @@ class InvoiceHeaderApiView(generics.GenericAPIView):
 
         if invoice_header_id is None:
             return Response(
-                "Debe suministrar el item_id", status=status.HTTP_400_BAD_REQUEST
+                "Debe suministrar el invoice_header_id",
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
@@ -328,6 +332,23 @@ class InvoiceHeaderApiView(generics.GenericAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except models.InvoiceHeader.DoesNotExist as e:
             return Response(f"{e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return Response(f"{e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def delete(self, request):
+        invoice_header_id = request.query_params.get("invoice_header_id", None)
+        try:
+            with atomic():
+                invoice_header_instance = self.queryset.get(pk=invoice_header_id)
+                invoice_header_instance.inactivate()
+                map(
+                    lambda e: e.inactivate(),
+                    invoice_header_instance.invoice_detail.all(),
+                )
+                map(lambda e: e.inanctivate(), invoice_header_instance.payment.all())
+                return Response(status=status.HTTP_202_ACCEPTED)
+        except models.InvoiceHeader.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response(f"{e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -350,3 +371,24 @@ class PaymentMethodListAPIView(generics.ListAPIView):
     def get(self, request):
         serializer = self.serializer_class(self.queryset.filter(status=True), many=True)
         return Response(serializer.data)
+
+
+class CustomAuthToken(ObtainAuthToken):
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data["user"]
+        token, created = Token.objects.get_or_create(user=user)
+        permissions = user.get_all_permissions()
+
+        return Response(
+            {
+                "token": token.key,
+                "user_id": user.pk,
+                "username": f"{user.first_name} {user.last_name}",
+                "email": user.email,
+                "permissions": permissions,
+            }
+        )

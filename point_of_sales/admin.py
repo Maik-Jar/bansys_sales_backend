@@ -11,6 +11,9 @@ from .models import (
     Output,
     Input,
     Return,
+    SequenceReceipt,
+    Payment,
+    Company,
 )
 
 
@@ -45,7 +48,7 @@ class CustomerAdmin(admin.ModelAdmin):
 @admin.register(Receipt)
 class ReceiptAdmin(admin.ModelAdmin):
     list_filter = ("name", "serial", "expiration")
-    list_display = ("name", "serial", "expiration")
+    list_display = ("name", "id", "serial", "expiration")
 
 
 @admin.register(Provider)
@@ -76,3 +79,28 @@ class InputAdmin(admin.ModelAdmin):
 class ReturnAdmin(admin.ModelAdmin):
     list_filter = ("item", "quantity", "reason", "return_date")
     list_display = ("item", "quantity", "reason", "return_date")
+
+
+@admin.register(SequenceReceipt)
+class SequenceReceiptAdmin(admin.ModelAdmin):
+    list_filter = ("receipt", "sequence", "to_reuse", "status")
+    list_display = ("receipt", "sequence", "to_reuse", "status")
+
+
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_filter = (
+        "invoice",
+        "amount",
+        "payment_method",
+        "status",
+        "date_created",
+        "date_updated",
+    )
+    list_display = ("invoice", "amount", "payment_method", "status")
+
+
+@admin.register(Company)
+class CompanyAdmin(admin.ModelAdmin):
+    list_filter = ("name",)
+    list_display = ("name", "document_type", "document_id")

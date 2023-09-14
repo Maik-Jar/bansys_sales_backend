@@ -1,4 +1,4 @@
 env
-.sqlite3
-.code-workspace
+*.sqlite3
+*.code-workspace
 invoice.json

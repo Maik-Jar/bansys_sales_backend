@@ -1,5 +1,15 @@
-from django.db import models
+from django.db import models, transaction
 from django.contrib.auth.models import User
+from django.utils import timezone
+from functools import reduce
+from sequences import Sequence, get_last_value
+import locale
+
+locale.setlocale(locale.LC_MONETARY, "es_DO")
+
+
+def sequence_generated(name):
+    return next(Sequence(sequence_name=name))
 
 
 # Create your models here.
@@ -38,6 +48,24 @@ class SaleType(models.Model):
         return self.name
 
 
+class Company(models.Model):
+    name = models.CharField(max_length=50)
+    document_type = models.ForeignKey(
+        DocumentType, on_delete=models.CASCADE, related_name="company_document_type"
+    )
+    document_id = models.CharField(max_length=15, null=True)
+    email = models.EmailField(blank=True, null=True)
+    phone = models.CharField(max_length=10)
+    address = models.CharField(max_length=70, blank=True, null=True)
+    logo = models.ImageField(upload_to="company/")
+
+    def format_phone(self):
+        return f"({self.phone[0:3]}) {self.phone[3:6]}-{self.phone[6:10]}"
+
+    def __str__(self) -> str:
+        return self.name
+
+
 class Customer(models.Model):
     name = models.CharField(max_length=50)
     document_type = models.ForeignKey(
@@ -47,6 +75,9 @@ class Customer(models.Model):
     email = models.EmailField(blank=True, null=True)
     phone = models.CharField(max_length=10)
     address = models.CharField(max_length=70, blank=True, null=True)
+
+    def format_phone(self):
+        return f"({self.phone[0:3]}) {self.phone[3:6]}-{self.phone[6:10]}"
 
     def __str__(self) -> str:
         return self.name
@@ -72,13 +103,56 @@ class Receipt(models.Model):
     def __str__(self) -> str:
         return f"{self.name} : {self.serial}"
 
+    def save(self, *args, **kwargs):
+        if not self.id:
+            try:
+                with transaction.atomic():
+                    Sequence(
+                        sequence_name=f"{self.serial}", initial_value=self.init - 1
+                    ).get_next_value()
+                    return super().save(*args, **kwargs)
+            except:
+                raise Exception(
+                    "No se ha podido crear el comprobante por problemas internos."
+                )
+
 
 class SequenceReceipt(models.Model):
     receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE)
-    sequence = models.IntegerField()
+    sequence = models.CharField(max_length=12)
+    to_reuse = models.BooleanField(default=False, editable=False)
+    status = models.BooleanField(default=True)
+    date_created = models.DateTimeField(auto_now_add=True)
+
+    def mark_to_reuse(self):
+        if self.receipt.expiration.year >= timezone.now().year:
+            self.to_reuse = True
+            self.save()
+
+    def unmark_to_reuse(self):
+        self.to_reuse = False
+        self.save()
+
+    def inactivate(self):
+        self.to_reuse = False
+        self.status = False
+        self.save()
 
     def __str__(self) -> str:
         return f"{self.receipt.name} : {self.sequence}"
+
+    def save(self, *args, **kwargs):
+        if not self.sequence:
+            if not (get_last_value(f"{self.receipt.serial}") >= self.receipt.end):
+                self.sequence = str(sequence_generated(f"{self.receipt.serial}")).zfill(
+                    8
+                )
+            else:
+                raise Exception(
+                    "No se puede generar secuencia del comprobante porque a alcanzado el limite."
+                )
+
+        return super().save(*args, **kwargs)
 
     class Meta:
         constraints = [
@@ -143,17 +217,12 @@ class InvoiceHeader(models.Model):
     customer = models.ForeignKey(
         Customer, on_delete=models.CASCADE, related_name="customer"
     )
-    number = models.CharField(max_length=12, unique=True)
+    number = models.CharField(max_length=12, unique=True, editable=False)
     receipt_type = models.ForeignKey(Receipt, on_delete=models.CASCADE)
     sequence_receipt = models.ForeignKey(
         SequenceReceipt, on_delete=models.CASCADE, unique=True, null=True
     )
-    # subtotal = models.DecimalField(max_digits=12, decimal_places=2)# TODO: debe morir
-    # total_tax = models.DecimalField(max_digits=12, decimal_places=2)# TODO: debe morir
     discount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    # total = models.DecimalField(max_digits=12, decimal_places=2) # TODO: debe morir
-    # Payment = models.ManyToManyField(Payment, default=0.00)
-    # payment_method = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE)
     sales_type = models.ForeignKey(SaleType, on_delete=models.CASCADE)
     comment = models.CharField(max_length=400, null=True, blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
@@ -164,10 +233,51 @@ class InvoiceHeader(models.Model):
     user_updated = models.ForeignKey(
         User, on_delete=models.DO_NOTHING, related_name="user_updated"
     )
-    status = models.BooleanField(default=True)
+    status = models.BooleanField(default=True, editable=False)
+
+    def inactivate(self):
+        self.status = False
+        if self.sequence_receipt is not None:
+            self.sequence_receipt.mark_to_reuse()
+            self.sequence_receipt = None
+
+        self.save()
+
+    def calculateTotalQuantity(self):
+        return reduce((lambda x, y: x + y.quantity), self.invoice_detail.all(), 0)
+
+    def calculateTotalTax(self):
+        return locale.currency(
+            reduce((lambda x, y: x + y.calculateTax()), self.invoice_detail.all(), 0),
+            grouping=True,
+        )
+
+    def calculateTotalDiscount(self):
+        return locale.currency(
+            reduce(
+                (lambda x, y: x + y.calculateDiscount()), self.invoice_detail.all(), 0
+            ),
+            grouping=True,
+        )
+
+    def calculateTotalAmount(self):
+        return locale.currency(
+            reduce(
+                (lambda x, y: x + y.calculateAmount()), self.invoice_detail.all(), 0
+            ),
+            grouping=True,
+        )
 
     def __str__(self) -> str:
         return f"{self.id} / {self.customer.name}"
+
+    def save(self, *args, **kwargs):
+        if not self.number:
+            self.number = f"{timezone.now().year}" + str(
+                sequence_generated(f"invoice_number-{timezone.now().year}")
+            ).zfill(5)
+
+        return super().save(*args, **kwargs)
 
 
 class InvoiceDetail(models.Model):
@@ -180,8 +290,29 @@ class InvoiceDetail(models.Model):
     tax = models.DecimalField(max_digits=12, decimal_places=2)
     discount = models.DecimalField(max_digits=3, decimal_places=2)
 
+    def inactivate(self):
+        self.item.increase_stock(self.quantity)
+
+    def calculateDiscount(self):
+        if 0 < self.discount < 1:
+            return (self.price * self.quantity) * self.discount
+        return self.discount
+
+    def calculateTax(self):
+        return ((self.price * self.quantity) - self.calculateDiscount()) * self.tax
+
+    def calculateAmount(self):
+        return self.calculateTax() + (
+            self.price * self.quantity - self.calculateDiscount()
+        )
+
     def __str__(self) -> str:
         return f"{self.invoice_header.id} / {self.id} / {self.item.name}"
+
+    def delete(self, *args, **kwargs):
+        self.item.increase_stock(self.quantity)
+
+        return super().delete(*args, **kwargs)
 
 
 class Payment(models.Model):
@@ -193,6 +324,13 @@ class Payment(models.Model):
     status = models.BooleanField(default=True)
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
+
+    def inactivate(self):
+        self.status = False
+        self.save()
+
+    def formatCurrencyPayment(self):
+        return locale.currency(self.amount, grouping=True)
 
 
 class Output(models.Model):

@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from rest_framework.authtoken import views
 from .api import (
     CustomerApiView,
@@ -11,12 +11,13 @@ from .api import (
     ItemListAPIView,
     SalesTypeListAPIView,
     PaymentMethodListAPIView,
+    CustomAuthToken,
     # LoginAPIView,
     # LogoutAPIView,
 )
 
 urlpatterns = [
-    path("api/login", views.obtain_auth_token),
+    path("api/login", CustomAuthToken.as_view()),
     path("api/receipts", ReceiptListAPIView.as_view()),
     path("api/documents_types", DocumentTypeAPIView.as_view()),
     path("api/taxes", TaxListAPIView.as_view()),
@@ -31,4 +32,5 @@ urlpatterns = [
         name="payments_methods",
     ),
     path("api/invoices", InvoiceHeaderApiView.as_view(), name="invoices"),
+    path("api/invoices/", include("point_of_sales.urls")),
 ]
