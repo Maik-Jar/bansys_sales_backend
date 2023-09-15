@@ -1,4 +1,3 @@
-from weasyprint import HTML, Attachment
 from django.http import HttpResponse
 from django.template.loader import get_template
 from . import models
@@ -36,6 +35,36 @@ def print_invoice(request):
             return HttpResponse(template.render(context))
 
         return HttpResponse("No existe factura.")
+
+
+def print_quotation(request):
+    if request.method == "GET":
+        quotation_header_id = request.GET.get("quotation_header_id", None)
+
+        if quotation_header_id:
+            quotation_header_id = int(quotation_header_id)
+            papel_size = request.GET.get("papel_size", "A4")
+
+            quotation_header_instance = models.QuotationHeader.objects.get(
+                pk=quotation_header_id
+            )
+            quotation_details_intance = quotation_header_instance.quotation_detail.all()
+            company_instance = models.Company.objects.get(pk=1)
+
+            template_path = "quotation.html"
+
+            template = get_template(template_path)
+
+            context = {
+                "header": quotation_header_instance,
+                "details": quotation_details_intance,
+                "papel_size": papel_size,
+                "company": company_instance,
+            }
+
+            return HttpResponse(template.render(context))
+
+        return HttpResponse("No existe cotizacion.")
 
 
 def logout(request):
