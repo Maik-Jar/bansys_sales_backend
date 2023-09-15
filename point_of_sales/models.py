@@ -117,51 +117,6 @@ class Receipt(models.Model):
                 )
 
 
-class SequenceReceipt(models.Model):
-    receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE)
-    sequence = models.CharField(max_length=12)
-    to_reuse = models.BooleanField(default=False, editable=False)
-    status = models.BooleanField(default=True)
-    date_created = models.DateTimeField(auto_now_add=True)
-
-    def mark_to_reuse(self):
-        if self.receipt.expiration.year >= timezone.now().year:
-            self.to_reuse = True
-            self.save()
-
-    def unmark_to_reuse(self):
-        self.to_reuse = False
-        self.save()
-
-    def inactivate(self):
-        self.to_reuse = False
-        self.status = False
-        self.save()
-
-    def __str__(self) -> str:
-        return f"{self.receipt.name} : {self.sequence}"
-
-    def save(self, *args, **kwargs):
-        if not self.sequence:
-            if not (get_last_value(f"{self.receipt.serial}") >= self.receipt.end):
-                self.sequence = str(sequence_generated(f"{self.receipt.serial}")).zfill(
-                    8
-                )
-            else:
-                raise Exception(
-                    "No se puede generar secuencia del comprobante porque a alcanzado el limite."
-                )
-
-        return super().save(*args, **kwargs)
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["receipt", "sequence"], name="unique_sequence_receipt"
-            )
-        ]
-
-
 class Provider(models.Model):
     name = models.CharField(max_length=50)
     document_type = models.ForeignKey(DocumentType, on_delete=models.CASCADE)
@@ -213,15 +168,104 @@ class Item(models.Model):
             self.save()
 
 
+class QuotationHeader(models.Model):
+    customer = models.JSONField(null=True)
+    number = models.CharField(max_length=12, unique=True, editable=False)
+    discount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    sales_type = models.ForeignKey(SaleType, on_delete=models.CASCADE)
+    comment = models.CharField(max_length=400, null=True, blank=True)
+    date_created = models.DateTimeField(auto_now_add=True)
+    date_updated = models.DateTimeField(auto_now=True)
+    user_created = models.ForeignKey(
+        User, on_delete=models.DO_NOTHING, related_name="quotation_user_created"
+    )
+    user_updated = models.ForeignKey(
+        User, on_delete=models.DO_NOTHING, related_name="quotation_user_updated"
+    )
+    status = models.BooleanField(default=True, editable=False)
+
+    def inactivate(self):
+        self.status = False
+        self.save()
+
+    def calculateTotalQuantity(self):
+        return reduce((lambda x, y: x + y.quantity), self.quotation_detail.all(), 0)
+
+    def calculateTotalTax(self):
+        return locale.currency(
+            reduce((lambda x, y: x + y.calculateTax()), self.quotation_detail.all(), 0),
+            grouping=True,
+        )
+
+    def calculateTotalDiscount(self):
+        return locale.currency(
+            reduce(
+                (lambda x, y: x + y.calculateDiscount()), self.quotation_detail.all(), 0
+            ),
+            grouping=True,
+        )
+
+    def calculateTotalAmount(self):
+        return locale.currency(
+            reduce(
+                (lambda x, y: x + y.calculateAmount()), self.quotation_detail.all(), 0
+            ),
+            grouping=True,
+        )
+
+    def __str__(self) -> str:
+        return f"{self.id} / {self.customer.name}"
+
+    def save(self, *args, **kwargs):
+        if not self.number:
+            self.number = f"{timezone.now().year}" + str(
+                sequence_generated(f"quotation_number-{timezone.now().year}")
+            ).zfill(5)
+
+        if self.customer is not None:
+            self.customer["name"] = self.customer["name"].upper()
+
+        return super().save(*args, **kwargs)
+
+
+class QuotationDetail(models.Model):
+    quotation_header = models.ForeignKey(
+        QuotationHeader, on_delete=models.CASCADE, related_name="quotation_detail"
+    )
+    item = models.ForeignKey(
+        Item, on_delete=models.CASCADE, related_name="quotation_item"
+    )
+    quantity = models.IntegerField(default=1)
+    price = models.DecimalField(max_digits=12, decimal_places=2)
+    tax = models.DecimalField(max_digits=12, decimal_places=2)
+    discount = models.DecimalField(max_digits=3, decimal_places=2)
+
+    def calculateDiscount(self):
+        if 0 < self.discount < 1:
+            return (self.price * self.quantity) * self.discount
+        return self.discount
+
+    def calculateTax(self):
+        return ((self.price * self.quantity) - self.calculateDiscount()) * self.tax
+
+    def calculateAmount(self):
+        return self.calculateTax() + (
+            self.price * self.quantity - self.calculateDiscount()
+        )
+
+    def __str__(self) -> str:
+        return f"{self.quotation_header.id} / {self.id} / {self.item.name}"
+
+
 class InvoiceHeader(models.Model):
     customer = models.ForeignKey(
         Customer, on_delete=models.CASCADE, related_name="customer"
     )
     number = models.CharField(max_length=12, unique=True, editable=False)
-    receipt_type = models.ForeignKey(Receipt, on_delete=models.CASCADE)
-    sequence_receipt = models.ForeignKey(
-        SequenceReceipt, on_delete=models.CASCADE, unique=True, null=True
-    )
+    # receipt_type = models.ForeignKey(Receipt, on_delete=models.CASCADE)
+    # sequence_receipt = models.ForeignKey(
+    #     SequenceReceipt, on_delete=models.CASCADE, unique=True, null=True
+    # )
     discount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     sales_type = models.ForeignKey(SaleType, on_delete=models.CASCADE)
     comment = models.CharField(max_length=400, null=True, blank=True)
@@ -237,9 +281,9 @@ class InvoiceHeader(models.Model):
 
     def inactivate(self):
         self.status = False
-        if self.sequence_receipt is not None:
-            self.sequence_receipt.mark_to_reuse()
-            self.sequence_receipt = None
+        # if self.receipt_sequence is not None:
+        #     self.receipt_sequence.mark_to_reuse()
+        #     self.receipt_sequence = None
 
         self.save()
 
@@ -331,6 +375,67 @@ class Payment(models.Model):
 
     def formatCurrencyPayment(self):
         return locale.currency(self.amount, grouping=True)
+
+
+class SequenceReceipt(models.Model):
+    receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE)
+    invoice = models.OneToOneField(
+        InvoiceHeader,
+        on_delete=models.CASCADE,
+        related_name="receipt_sequence",
+        null=True,
+    )
+    sequence = models.CharField(max_length=12)
+    to_reuse = models.BooleanField(default=False, editable=False)
+    status = models.BooleanField(default=True)
+    date_created = models.DateTimeField(auto_now_add=True)
+    expiration = models.DateField()
+
+    def mark_to_reuse(self):
+        if self.receipt.expiration.year >= timezone.now().year:
+            self.to_reuse = True
+            self.invoice = None
+            self.save()
+
+    def unmark_to_reuse(self, invoive_instance):
+        self.to_reuse = False
+        self.invoice = invoive_instance
+        self.save()
+
+    def inactivate(self):
+        self.to_reuse = False
+        self.status = False
+        self.invoice = None
+        self.save()
+
+    def __str__(self) -> str:
+        return f"{self.receipt.name} : {self.sequence}"
+
+    def save(self, *args, **kwargs):
+        if not self.expiration:
+            self.expiration = self.receipt.expiration
+
+        if not self.sequence:
+            if not (get_last_value(f"{self.receipt.serial}") >= self.receipt.end):
+                self.sequence = str(sequence_generated(f"{self.receipt.serial}")).zfill(
+                    8
+                )
+            else:
+                raise Exception(
+                    "No se puede generar secuencia del comprobante porque a alcanzado el limite."
+                )
+
+        if self.invoice is not None and self.to_reuse:
+            self.to_reuse = False
+
+        return super().save(*args, **kwargs)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["receipt", "sequence"], name="unique_sequence_receipt"
+            )
+        ]
 
 
 class Output(models.Model):

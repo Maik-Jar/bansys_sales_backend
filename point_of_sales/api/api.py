@@ -346,8 +346,90 @@ class InvoiceHeaderApiView(generics.GenericAPIView):
                     invoice_header_instance.invoice_detail.all(),
                 )
                 map(lambda e: e.inanctivate(), invoice_header_instance.payment.all())
+
+                invoice_header_instance.receipt_sequence.mark_to_reuse()
+
                 return Response(status=status.HTTP_202_ACCEPTED)
         except models.InvoiceHeader.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response(f"{e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class QuotationHeaderApiView(generics.GenericAPIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [
+        permissions.IsAuthenticated,
+        permissions.DjangoModelPermissions | permissions.IsAdminUser,
+    ]
+    serializer_class = serializers.QuotationHeaderSerializer
+    queryset = models.QuotationHeader.objects.all()
+    filter_backends = (filters.SearchFilter,)
+    search_fields = [
+        "customer__name",
+        "customer__phone",
+        "customer__document_id",
+        "number",
+    ]
+
+    def get(self, request):
+        quotation_header_id = request.query_params.get("quotation_header_id", None)
+
+        if quotation_header_id:
+            try:
+                quotation_header = self.queryset.get(pk=quotation_header_id)
+                serializer = self.serializer_class(quotation_header)
+                return Response(serializer.data)
+            except models.QuotationHeader.DoesNotExist as e:
+                return Response(f"{e}", status=status.HTTP_404_NOT_FOUND)
+
+        quotations_headers_list = self.filter_queryset(self.queryset.all())
+        serializer = self.serializer_class(quotations_headers_list, many=True)
+        return self.get_paginated_response(self.paginate_queryset(serializer.data))
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        try:
+            if serializer.is_valid():
+                serializer.save(user_created=request.user, user_updated=request.user)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(f"{e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def put(self, request):
+        quotation_header_id = request.query_params.get("quotation_header_id", None)
+
+        if quotation_header_id is None:
+            return Response(
+                "Debe suministrar el quotation_header_id",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            quotation_header = self.queryset.get(pk=quotation_header_id)
+            serializer = self.serializer_class(quotation_header, data=request.data)
+
+            if serializer.is_valid():
+                serializer.save(user_updated=request.user)
+                return Response(serializer.data)
+
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except models.QuotationHeader.DoesNotExist as e:
+            return Response(f"{e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return Response(f"{e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def delete(self, request):
+        quotation_header_id = request.query_params.get("quotation_header_id", None)
+        try:
+            with atomic():
+                quotation_header_instance = self.queryset.get(pk=quotation_header_id)
+                quotation_header_instance.inactivate()
+
+                return Response(status=status.HTTP_202_ACCEPTED)
+        except models.QuotationHeader.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response(f"{e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
