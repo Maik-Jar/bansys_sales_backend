@@ -5,7 +5,7 @@ from functools import reduce
 from sequences import Sequence, get_last_value
 import locale
 
-locale.setlocale(locale.LC_MONETARY, "es_DO")
+locale.setlocale(locale.LC_MONETARY, "es_DO.UTF-8")
 
 
 def sequence_generated(name):
@@ -16,47 +16,72 @@ def sequence_generated(name):
 
 
 class DocumentType(models.Model):
-    name = models.CharField(max_length=30)
-    status = models.BooleanField(default=True)
+    name = models.CharField(max_length=30, verbose_name="Nombre")
+    status = models.BooleanField(default=True, verbose_name="Estado")
 
     def __str__(self) -> str:
         return self.name
+
+    class Meta:
+        verbose_name = "Tipo de documento"
+        verbose_name_plural = "Tipos de documento"
 
 
 class Tax(models.Model):
-    name = models.CharField(max_length=30)
-    percentage = models.DecimalField(max_digits=5, decimal_places=2)
-    status = models.BooleanField(default=True)
+    name = models.CharField(max_length=30, verbose_name="Nombre")
+    percentage = models.DecimalField(
+        max_digits=5, decimal_places=2, verbose_name="Porcentaje"
+    )
+    status = models.BooleanField(default=True, verbose_name="Estado")
 
     def __str__(self) -> str:
         return self.name
+
+    class Meta:
+        verbose_name = "Impuesto"
+        verbose_name_plural = "Impuestos"
 
 
 class PaymentMethod(models.Model):
-    name = models.CharField(max_length=30)
-    status = models.BooleanField(default=True)
+    name = models.CharField(max_length=30, verbose_name="Nombre")
+    status = models.BooleanField(default=True, verbose_name="Estado")
 
     def __str__(self) -> str:
         return self.name
+
+    class Meta:
+        verbose_name = "Metodo de pago"
+        verbose_name_plural = "Metodos de pago"
 
 
 class SaleType(models.Model):
-    name = models.CharField(max_length=60)
-    status = models.BooleanField(default=True)
+    name = models.CharField(max_length=60, verbose_name="Nombre")
+    status = models.BooleanField(default=True, verbose_name="Estado")
 
     def __str__(self) -> str:
         return self.name
 
+    class Meta:
+        verbose_name = "Tipo de venta"
+        verbose_name_plural = "Tipos de venta"
+
 
 class Company(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, verbose_name="Nombre")
     document_type = models.ForeignKey(
-        DocumentType, on_delete=models.CASCADE, related_name="company_document_type"
+        DocumentType,
+        on_delete=models.CASCADE,
+        related_name="company_document_type",
+        verbose_name="Tipo de documento",
     )
-    document_id = models.CharField(max_length=15, null=True)
-    email = models.EmailField(blank=True, null=True)
-    phone = models.CharField(max_length=10)
-    address = models.CharField(max_length=70, blank=True, null=True)
+    document_id = models.CharField(
+        max_length=15, null=True, verbose_name="No. Documento"
+    )
+    email = models.EmailField(blank=True, null=True, verbose_name="Correo")
+    phone = models.CharField(max_length=10, verbose_name="Teléfono")
+    address = models.CharField(
+        max_length=70, blank=True, null=True, verbose_name="Dirección"
+    )
     logo = models.ImageField(upload_to="company/")
 
     def format_phone(self):
@@ -65,16 +90,27 @@ class Company(models.Model):
     def __str__(self) -> str:
         return self.name
 
+    class Meta:
+        verbose_name = "Compañia"
+        verbose_name_plural = "Compañias"
+
 
 class Customer(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, verbose_name="Nombre completo")
     document_type = models.ForeignKey(
-        DocumentType, on_delete=models.CASCADE, related_name="document_type"
+        DocumentType,
+        on_delete=models.CASCADE,
+        related_name="document_type",
+        verbose_name="Tido de documento",
     )
-    document_id = models.CharField(max_length=15, null=True)
-    email = models.EmailField(blank=True, null=True)
-    phone = models.CharField(max_length=10)
-    address = models.CharField(max_length=70, blank=True, null=True)
+    document_id = models.CharField(
+        max_length=15, null=True, verbose_name="No. Documento"
+    )
+    email = models.EmailField(blank=True, null=True, verbose_name="Correo")
+    phone = models.CharField(max_length=10, verbose_name="Teléfono")
+    address = models.CharField(
+        max_length=70, blank=True, null=True, verbose_name="Dirección"
+    )
 
     def format_phone(self):
         return f"({self.phone[0:3]}) {self.phone[3:6]}-{self.phone[6:10]}"
@@ -90,15 +126,17 @@ class Customer(models.Model):
                 condition=models.Q(document_id__isnull=False),
             ),
         ]
+        verbose_name = "Cliente"
+        verbose_name_plural = "Clientes"
 
 
 class Receipt(models.Model):
-    name = models.CharField(max_length=25)
+    name = models.CharField(max_length=25, verbose_name="Nombre")
     serial = models.CharField(max_length=3, unique=True)
-    init = models.IntegerField()
-    end = models.IntegerField()
-    expiration = models.DateField()
-    status = models.BooleanField(default=True)
+    init = models.IntegerField(verbose_name="Inicio secuencia")
+    end = models.IntegerField(verbose_name="Fin secuencia")
+    expiration = models.DateField(verbose_name="Fecha de expiración")
+    status = models.BooleanField(default=True, verbose_name="Estado")
 
     def __str__(self) -> str:
         return f"{self.name} : {self.serial}"
@@ -116,15 +154,23 @@ class Receipt(models.Model):
                     "No se ha podido crear el comprobante por problemas internos."
                 )
 
+    class Meta:
+        verbose_name = "Comprobante"
+        verbose_name_plural = "Comprobantes"
+
 
 class Provider(models.Model):
-    name = models.CharField(max_length=50)
-    document_type = models.ForeignKey(DocumentType, on_delete=models.CASCADE)
-    document_id = models.CharField(max_length=15)
-    email = models.EmailField(blank=True, null=True)
-    phone = models.CharField(max_length=10)
-    address = models.CharField(max_length=70, blank=True, null=True)
-    status = models.BooleanField(default=True)
+    name = models.CharField(max_length=50, verbose_name="Nombre")
+    document_type = models.ForeignKey(
+        DocumentType, on_delete=models.CASCADE, verbose_name="Tipo de documento"
+    )
+    document_id = models.CharField(max_length=15, verbose_name="No. Documento")
+    email = models.EmailField(blank=True, null=True, verbose_name="Correo")
+    phone = models.CharField(max_length=10, verbose_name="Teléfono")
+    address = models.CharField(
+        max_length=70, blank=True, null=True, verbose_name="Dirección"
+    )
+    status = models.BooleanField(default=True, verbose_name="Estatus")
 
     def __str__(self) -> str:
         return self.name
@@ -136,18 +182,26 @@ class Provider(models.Model):
                 name="unique_provide_document_type_and_id",
             ),
         ]
+        verbose_name = "Proveedor"
+        verbose_name_plural = "Proveedores"
 
 
 class Item(models.Model):
-    name = models.CharField(max_length=70)
-    brand = models.CharField(max_length=20, blank=True, null=True)
-    reference = models.CharField(max_length=60, blank=True, null=True)
-    price = models.DecimalField(default=0, max_digits=12, decimal_places=2)
-    tax = models.ForeignKey(Tax, on_delete=models.CASCADE)
+    name = models.CharField(max_length=70, verbose_name="Nombre")
+    brand = models.CharField(max_length=20, blank=True, null=True, verbose_name="Marca")
+    reference = models.CharField(
+        max_length=60, blank=True, null=True, verbose_name="Referencia"
+    )
+    price = models.DecimalField(
+        default=0, max_digits=12, decimal_places=2, verbose_name="Precio"
+    )
+    tax = models.ForeignKey(Tax, on_delete=models.CASCADE, verbose_name="Impuesto")
     stock = models.IntegerField(default=0)
-    is_service = models.BooleanField(default=False)
-    provider = models.ForeignKey(Provider, on_delete=models.CASCADE)
-    status = models.BooleanField(default=True)
+    is_service = models.BooleanField(default=False, verbose_name="Servicio?")
+    provider = models.ForeignKey(
+        Provider, on_delete=models.CASCADE, verbose_name="Proveedor"
+    )
+    status = models.BooleanField(default=True, verbose_name="Estado")
 
     def __str__(self) -> str:
         return self.name
@@ -167,22 +221,44 @@ class Item(models.Model):
             self.stock = self.stock - quantity
             self.save()
 
+    class Meta:
+        verbose_name = "Artículo"
+        verbose_name_plural = "Artículos"
+
 
 class QuotationHeader(models.Model):
-    customer = models.JSONField(null=True)
-    number = models.CharField(max_length=12, unique=True, editable=False)
-    discount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    sales_type = models.ForeignKey(SaleType, on_delete=models.CASCADE)
-    comment = models.CharField(max_length=400, null=True, blank=True)
-    date_created = models.DateTimeField(auto_now_add=True)
-    date_updated = models.DateTimeField(auto_now=True)
+    customer = models.JSONField(null=True, verbose_name="Cliente")
+    number = models.CharField(
+        max_length=12, unique=True, editable=False, verbose_name="No. Cotización"
+    )
+    discount = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0.00, verbose_name="Descuento"
+    )
+    sales_type = models.ForeignKey(
+        SaleType, on_delete=models.CASCADE, verbose_name="Tipo de venta"
+    )
+    comment = models.CharField(
+        max_length=400, null=True, blank=True, verbose_name="Comentarios"
+    )
+    date_created = models.DateTimeField(
+        auto_now_add=True, verbose_name="Fecha de creación"
+    )
+    date_updated = models.DateTimeField(
+        auto_now=True, verbose_name="Fecha de actualización"
+    )
     user_created = models.ForeignKey(
-        User, on_delete=models.DO_NOTHING, related_name="quotation_user_created"
+        User,
+        on_delete=models.DO_NOTHING,
+        related_name="quotation_user_created",
+        verbose_name="Creado por",
     )
     user_updated = models.ForeignKey(
-        User, on_delete=models.DO_NOTHING, related_name="quotation_user_updated"
+        User,
+        on_delete=models.DO_NOTHING,
+        related_name="quotation_user_updated",
+        verbose_name="Actualizado por",
     )
-    status = models.BooleanField(default=True, editable=False)
+    status = models.BooleanField(default=True, editable=False, verbose_name="Estado")
 
     def inactivate(self):
         self.status = False
@@ -227,6 +303,10 @@ class QuotationHeader(models.Model):
 
         return super().save(*args, **kwargs)
 
+    class Meta:
+        verbose_name = "Cotización"
+        verbose_name_plural = "Cotizaciones"
+
 
 class QuotationDetail(models.Model):
     quotation_header = models.ForeignKey(
@@ -259,31 +339,45 @@ class QuotationDetail(models.Model):
 
 class InvoiceHeader(models.Model):
     customer = models.ForeignKey(
-        Customer, on_delete=models.CASCADE, related_name="customer"
+        Customer,
+        on_delete=models.CASCADE,
+        related_name="customer",
+        verbose_name="Cliente",
     )
-    number = models.CharField(max_length=12, unique=True, editable=False)
-    # receipt_type = models.ForeignKey(Receipt, on_delete=models.CASCADE)
-    # sequence_receipt = models.ForeignKey(
-    #     SequenceReceipt, on_delete=models.CASCADE, unique=True, null=True
-    # )
-    discount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    sales_type = models.ForeignKey(SaleType, on_delete=models.CASCADE)
-    comment = models.CharField(max_length=400, null=True, blank=True)
-    date_created = models.DateTimeField(auto_now_add=True)
-    date_updated = models.DateTimeField(auto_now=True)
+    number = models.CharField(
+        max_length=12, unique=True, editable=False, verbose_name="No. Factura"
+    )
+    discount = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0.00, verbose_name="Descuento"
+    )
+    sales_type = models.ForeignKey(
+        SaleType, on_delete=models.CASCADE, verbose_name="Tipo de venta"
+    )
+    comment = models.CharField(
+        max_length=400, null=True, blank=True, verbose_name="Comentarios"
+    )
+    date_created = models.DateTimeField(
+        auto_now_add=True, verbose_name="Fecha de creación"
+    )
+    date_updated = models.DateTimeField(
+        auto_now=True, verbose_name="Fecha de actualización"
+    )
     user_created = models.ForeignKey(
-        User, on_delete=models.DO_NOTHING, related_name="user_created"
+        User,
+        on_delete=models.DO_NOTHING,
+        related_name="user_created",
+        verbose_name="Creado por",
     )
     user_updated = models.ForeignKey(
-        User, on_delete=models.DO_NOTHING, related_name="user_updated"
+        User,
+        on_delete=models.DO_NOTHING,
+        related_name="user_updated",
+        verbose_name="Actualizado por",
     )
-    status = models.BooleanField(default=True, editable=False)
+    status = models.BooleanField(default=True, editable=False, verbose_name="Estado")
 
     def inactivate(self):
         self.status = False
-        # if self.receipt_sequence is not None:
-        #     self.receipt_sequence.mark_to_reuse()
-        #     self.receipt_sequence = None
 
         self.save()
 
@@ -313,7 +407,7 @@ class InvoiceHeader(models.Model):
         )
 
     def __str__(self) -> str:
-        return f"{self.id} / {self.customer.name}"
+        return f"{self.number} / {self.customer.name} / {self.calculateTotalAmount()}"
 
     def save(self, *args, **kwargs):
         if not self.number:
@@ -322,6 +416,10 @@ class InvoiceHeader(models.Model):
             ).zfill(5)
 
         return super().save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = "Factura"
+        verbose_name_plural = "Facturas"
 
 
 class InvoiceDetail(models.Model):
@@ -360,14 +458,25 @@ class InvoiceDetail(models.Model):
 
 
 class Payment(models.Model):
-    amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    invoice = models.ForeignKey(
-        InvoiceHeader, on_delete=models.CASCADE, related_name="payment"
+    amount = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0.00, verbose_name="Monto"
     )
-    payment_method = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE)
-    status = models.BooleanField(default=True)
-    date_created = models.DateTimeField(auto_now_add=True)
-    date_updated = models.DateTimeField(auto_now=True)
+    invoice = models.ForeignKey(
+        InvoiceHeader,
+        on_delete=models.CASCADE,
+        related_name="payment",
+        verbose_name="Factura",
+    )
+    payment_method = models.ForeignKey(
+        PaymentMethod, on_delete=models.CASCADE, verbose_name="Método de pago"
+    )
+    status = models.BooleanField(default=True, verbose_name="Estado")
+    date_created = models.DateTimeField(
+        auto_now_add=True, verbose_name="Fecha de creación"
+    )
+    date_updated = models.DateTimeField(
+        auto_now=True, verbose_name="Fecha de actualización"
+    )
 
     def inactivate(self):
         self.status = False
@@ -376,20 +485,29 @@ class Payment(models.Model):
     def formatCurrencyPayment(self):
         return locale.currency(self.amount, grouping=True)
 
+    class Meta:
+        verbose_name = "Pago"
+        verbose_name_plural = "Pagos"
+
 
 class SequenceReceipt(models.Model):
-    receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE)
+    receipt = models.ForeignKey(
+        Receipt, on_delete=models.CASCADE, verbose_name="Comprobante"
+    )
     invoice = models.OneToOneField(
         InvoiceHeader,
         on_delete=models.CASCADE,
         related_name="receipt_sequence",
         null=True,
+        verbose_name="Factura",
     )
-    sequence = models.CharField(max_length=12)
-    to_reuse = models.BooleanField(default=False, editable=False)
-    status = models.BooleanField(default=True)
-    date_created = models.DateTimeField(auto_now_add=True)
-    expiration = models.DateField()
+    sequence = models.CharField(max_length=12, verbose_name="Secuencia")
+    to_reuse = models.BooleanField(default=False, editable=False, verbose_name="Reusar")
+    status = models.BooleanField(default=True, verbose_name="Estado")
+    date_created = models.DateTimeField(
+        auto_now_add=True, verbose_name="Fecha de creación"
+    )
+    expiration = models.DateField(verbose_name="fecha de expiración")
 
     def mark_to_reuse(self):
         if self.receipt.expiration.year >= timezone.now().year:
@@ -436,13 +554,17 @@ class SequenceReceipt(models.Model):
                 fields=["receipt", "sequence"], name="unique_sequence_receipt"
             )
         ]
+        verbose_name = "Secuencia de comprobante"
+        verbose_name_plural = "Secuencia de comprobantes"
 
 
 class Output(models.Model):
-    item = models.ForeignKey(Item, on_delete=models.CASCADE)
-    quantity = models.IntegerField(default=1)
-    reason = models.CharField(max_length=50)
-    departure_date = models.DateTimeField(auto_now_add=True)
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, verbose_name="Artículo")
+    quantity = models.IntegerField(default=1, verbose_name="Cantidad")
+    reason = models.CharField(max_length=50, verbose_name="Razón")
+    departure_date = models.DateTimeField(
+        auto_now_add=True, verbose_name="Fecha de salida"
+    )
 
     def __str__(self) -> str:
         return f"{self.item.name} / {self.departure_date}"
@@ -458,14 +580,22 @@ class Output(models.Model):
 
         return super().save(*args, **kwargs)
 
+    class Meta:
+        verbose_name = "Salida"
+        verbose_name_plural = "Salidas"
+
 
 class Input(models.Model):
-    item = models.ForeignKey(Item, on_delete=models.CASCADE)
-    quantity = models.IntegerField(default=1)
-    provider = models.ForeignKey(Provider, on_delete=models.CASCADE)
-    purchase_order = models.CharField(max_length=12)
-    invoice_number = models.CharField(max_length=12)
-    date_of_entry = models.DateTimeField(auto_now_add=True)
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, verbose_name="Artículo")
+    quantity = models.IntegerField(default=1, verbose_name="Cantidad")
+    provider = models.ForeignKey(
+        Provider, on_delete=models.CASCADE, verbose_name="Proveedor"
+    )
+    purchase_order = models.CharField(max_length=12, verbose_name="Orden de compra")
+    invoice_number = models.CharField(max_length=12, verbose_name="No. Factura")
+    date_of_entry = models.DateTimeField(
+        auto_now_add=True, verbose_name="Fecha de entrada"
+    )
 
     def __str__(self) -> str:
         return f"{self.item.name} / {self.date_of_entry}"
@@ -479,12 +609,18 @@ class Input(models.Model):
 
         return super().save(*args, **kwargs)
 
+    class Meta:
+        verbose_name = "Entrada"
+        verbose_name_plural = "Entradas"
+
 
 class Return(models.Model):
-    item = models.ForeignKey(Item, on_delete=models.CASCADE)
-    quantity = models.IntegerField(default=1)
-    reason = models.CharField(max_length=50)
-    return_date = models.DateTimeField(auto_now_add=True)
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, verbose_name="Artículo")
+    quantity = models.IntegerField(default=1, verbose_name="Cantidad")
+    reason = models.CharField(max_length=50, verbose_name="Razón")
+    return_date = models.DateTimeField(
+        auto_now_add=True, verbose_name="Fecha de devolución"
+    )
 
     def __str__(self) -> str:
         return f"{self.item.name} / {self.return_date}"
@@ -497,3 +633,7 @@ class Return(models.Model):
             self.item.save()
 
         return super().save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = "Devolución"
+        verbose_name_plural = "Devoluciones"

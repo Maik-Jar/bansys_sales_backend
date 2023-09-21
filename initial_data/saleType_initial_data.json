@@ -1,0 +1,1 @@
+[{"model": "point_of_sales.saletype", "pk": 1, "fields": {"name": "Contado", "status": true}}, {"model": "point_of_sales.saletype", "pk": 2, "fields": {"name": "Credito", "status": true}}]

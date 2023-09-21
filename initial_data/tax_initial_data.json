@@ -1,0 +1,1 @@
+[{"model": "point_of_sales.tax", "pk": 1, "fields": {"name": "ITBIS", "percentage": "18.00", "status": true}}]

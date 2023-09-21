@@ -1,0 +1,1 @@
+[{"model": "point_of_sales.receipt", "pk": 1, "fields": {"name": "N/A", "serial": "N/A", "init": 0, "end": 0, "expiration": "2023-08-22", "status": true}}]

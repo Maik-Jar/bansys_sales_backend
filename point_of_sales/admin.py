@@ -14,6 +14,8 @@ from .models import (
     SequenceReceipt,
     Payment,
     Company,
+    QuotationHeader,
+    InvoiceHeader,
 )
 
 
@@ -61,6 +63,7 @@ class ProviderAdmin(admin.ModelAdmin):
 class ItemAdmin(admin.ModelAdmin):
     list_filter = ("name", "id", "brand", "provider", "price", "stock")
     list_display = ("name", "id", "brand", "provider", "price", "stock")
+    readonly_fields = ("stock",)
 
 
 @admin.register(Output)
@@ -85,6 +88,7 @@ class ReturnAdmin(admin.ModelAdmin):
 class SequenceReceiptAdmin(admin.ModelAdmin):
     list_filter = ("receipt", "sequence", "to_reuse", "status")
     list_display = ("receipt", "sequence", "to_reuse", "status")
+    readonly_fields = ("sequence", "receipt")
 
 
 @admin.register(Payment)
@@ -104,3 +108,21 @@ class PaymentAdmin(admin.ModelAdmin):
 class CompanyAdmin(admin.ModelAdmin):
     list_filter = ("name",)
     list_display = ("name", "document_type", "document_id")
+
+
+@admin.register(InvoiceHeader)
+class InvoiceHeaderAdmin(admin.ModelAdmin):
+    list_filter = ("customer", "number", "user_created", "user_updated")
+    list_display = (
+        "number",
+        "customer",
+        "receipt_sequence",
+        "calculateTotalAmount",
+        "status",
+    )
+
+
+# @admin.register(QuotationHeader)
+# class QuotationHeaderAdmin(admin.ModelAdmin):
+#     list_filter = ("name",)
+#     list_display = ("name", "document_type", "document_id")
