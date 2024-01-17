@@ -131,8 +131,7 @@
             <img
               src="{{ company.logo.url }}"
               alt="{{ company.name }}"
-              width="200"
-              height="100"
+              style="width: 150px; max-height: 60%"
             />
           </div>
           <div>
@@ -207,7 +206,9 @@
       <div class="footer">
         <div class="comments">
           <h3 class="heading-2 mb">Comentarios</h3>
-          <p class="p">{{header.comment}}</p>
+            {% if header.comment %}
+                <p class="p">{{header.comment}}</p>
+            {%endif%}
         </div>
       </div>
       <div class="footer">

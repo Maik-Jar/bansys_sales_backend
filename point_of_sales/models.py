@@ -318,7 +318,7 @@ class QuotationDetail(models.Model):
     quantity = models.IntegerField(default=1)
     price = models.DecimalField(max_digits=12, decimal_places=2)
     tax = models.DecimalField(max_digits=12, decimal_places=2)
-    discount = models.DecimalField(max_digits=3, decimal_places=2)
+    discount = models.DecimalField(max_digits=12, decimal_places=2)
 
     def calculateDiscount(self):
         if 0 < self.discount < 1:
@@ -430,7 +430,7 @@ class InvoiceDetail(models.Model):
     quantity = models.IntegerField(default=1)
     price = models.DecimalField(max_digits=12, decimal_places=2)
     tax = models.DecimalField(max_digits=12, decimal_places=2)
-    discount = models.DecimalField(max_digits=3, decimal_places=2)
+    discount = models.DecimalField(max_digits=12, decimal_places=2)
 
     def inactivate(self):
         self.item.increase_stock(self.quantity)
@@ -492,7 +492,10 @@ class Payment(models.Model):
 
 class SequenceReceipt(models.Model):
     receipt = models.ForeignKey(
-        Receipt, on_delete=models.CASCADE, verbose_name="Comprobante"
+        Receipt,
+        on_delete=models.CASCADE,
+        related_name="sequence",
+        verbose_name="Comprobante",
     )
     invoice = models.OneToOneField(
         InvoiceHeader,

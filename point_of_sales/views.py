@@ -1,6 +1,7 @@
 from django.http import HttpResponse
 from django.template.loader import get_template
 from . import models
+from weasyprint import HTML
 
 # Create your views here.
 
@@ -31,8 +32,16 @@ def print_invoice(request):
                 "papel_size": papel_size,
                 "company": company_instance,
             }
+            cache = {}
+            response = HttpResponse(content_type="application/pdf")
+            response["Content-Disposition"] = "inline"
+            HTML(
+                string=template.render(context), base_url=request.build_absolute_uri()
+            ).write_pdf(response, image_cache=cache)
 
-            return HttpResponse(template.render(context))
+            return response
+
+            # return HttpResponse(template.render(context))
 
         return HttpResponse("No existe factura.")
 
@@ -62,7 +71,15 @@ def print_quotation(request):
                 "company": company_instance,
             }
 
-            return HttpResponse(template.render(context))
+            response = HttpResponse(content_type="application/pdf")
+            response["Content-Disposition"] = "inline"
+            HTML(
+                string=template.render(context), base_url=request.build_absolute_uri()
+            ).write_pdf(response)
+
+            return response
+
+            # return HttpResponse(template.render(context))
 
         return HttpResponse("No existe cotizacion.")
 

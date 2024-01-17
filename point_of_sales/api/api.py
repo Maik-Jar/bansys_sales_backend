@@ -282,7 +282,6 @@ class InvoiceHeaderApiView(generics.GenericAPIView):
         "customer__name",
         "customer__phone",
         "customer__document_id",
-        "receipt_type__name",
         "number",
     ]
 

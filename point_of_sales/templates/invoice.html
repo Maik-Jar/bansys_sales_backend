@@ -131,8 +131,7 @@
             <img
               src="{{ company.logo.url }}"
               alt="{{ company.name }}"
-              width="200"
-              height="100"
+              style="width: 150px; max-height: 60%"
             />
           </div>
           <div>
@@ -145,13 +144,13 @@
           </div>
         </div>
         <div class="receipt-info">
-            {% if header.receipt_type.id != 1%}
-          <h3 class="heading-1">{{header.receipt_type.name}}</h3>
-          <p class="p">
-            {{header.receipt_type.serial}}{{header.sequence_receipt.sequence}}
-          </p>
-          <p class="p">{{header.receipt_type.expiration|date:"d-m-Y"}}</p>
-          {% endif %}
+            {% if header.receipt_sequence.receipt.id != 1 %}
+                <h3 class="heading-1">{{header.receipt_sequence.receipt.name}}</h3>
+                <p class="p">
+                    {{header.receipt_sequence.receipt.serial}}{{header.receipt_sequence.sequence}}
+                </p>
+                <p class="p">{{header.receipt_sequence.expiration|date:"d-m-Y"}}</p>
+            {% endif %}
         </div>
       </div>
       <div class="header-line-two">
@@ -214,7 +213,9 @@
       <div class="footer">
         <div class="comments">
           <h3 class="heading-2 mb">Comentarios</h3>
-          <p class="p">{{header.comment}}</p>
+            {% if header.comment %}
+                <p class="p">{{header.comment}}</p>
+            {%endif%}
         </div>
         <div class="payments">
           <h3 class="heading-2 mb">Pagos Aplicados</h3>
