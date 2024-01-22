@@ -2,6 +2,8 @@ import io
 from django.http import FileResponse, HttpResponse
 from reportlab.pdfgen import canvas
 from . import models
+from django.template.loader import get_template
+from weasyprint import HTML
 
 # Create your views here.
 
@@ -25,8 +27,8 @@ def print_invoice(request):
 
             pdf = canvas.Canvas(buffer)
 
-            pdf.drawImage(company_instance.logo.path, 25, 750, width=75, height=50)
-            pdf.drawString(100, 100, "Hello world.")
+            pdf.drawImage(company_instance.logo.path, 25, 750, width=110, height=25)
+            pdf.drawString(150, 780, f"{company_instance.name}")
 
             pdf.showPage()
             pdf.save()
