@@ -1,7 +1,7 @@
-from django.http import HttpResponse
-from django.template.loader import get_template
+import io
+from django.http import FileResponse, HttpResponse
+from reportlab.pdfgen import canvas
 from . import models
-from weasyprint import HTML
 
 # Create your views here.
 
@@ -21,9 +21,15 @@ def print_invoice(request):
             payment_instance = invoice_header_instance.payment.filter(status=True)
             company_instance = models.Company.objects.get(pk=1)
 
-            template_path = "invoice.html"
+            buffer = io.BytesIO()
 
-            template = get_template(template_path)
+            pdf = canvas.Canvas(buffer)
+
+            pdf.drawImage(company_instance.logo.path, 25, 750, width=75, height=50)
+            pdf.drawString(100, 100, "Hello world.")
+
+            pdf.showPage()
+            pdf.save()
 
             context = {
                 "header": invoice_header_instance,
@@ -32,16 +38,12 @@ def print_invoice(request):
                 "papel_size": papel_size,
                 "company": company_instance,
             }
-            cache = {}
-            response = HttpResponse(content_type="application/pdf")
+
+            buffer.seek(0)
+
+            response = FileResponse(buffer, as_attachment=True, filename="hello.pdf")
             response["Content-Disposition"] = "inline"
-            HTML(
-                string=template.render(context), base_url=request.build_absolute_uri()
-            ).write_pdf(response, image_cache=cache)
-
             return response
-
-            # return HttpResponse(template.render(context))
 
         return HttpResponse("No existe factura.")
 
