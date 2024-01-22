@@ -82,7 +82,3 @@ def print_quotation(request):
             # return HttpResponse(template.render(context))
 
         return HttpResponse("No existe cotizacion.")
-
-
-def logout(request):
-    pass
