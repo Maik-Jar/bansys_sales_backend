@@ -195,11 +195,16 @@ class Item(models.Model):
     price = models.DecimalField(
         default=0, max_digits=12, decimal_places=2, verbose_name="Precio"
     )
-    tax = models.ForeignKey(Tax, on_delete=models.CASCADE, verbose_name="Impuesto")
     stock = models.IntegerField(default=0)
+    stock_min = models.DecimalField(
+        default=0, max_digits=10, decimal_places=2, verbose_name="Minimo"
+    )
+    stock_max = models.DecimalField(
+        default=0, max_digits=10, decimal_places=2, verbose_name="Maximo"
+    )
     is_service = models.BooleanField(default=False, verbose_name="Servicio?")
-    provider = models.ForeignKey(
-        Provider, on_delete=models.CASCADE, verbose_name="Proveedor"
+    provider = models.ManyToManyField(
+        Provider, on_delete=models.DO_NOTHING, verbose_name="Proveedor"
     )
     status = models.BooleanField(default=True, verbose_name="Estado")
 
@@ -344,6 +349,7 @@ class InvoiceHeader(models.Model):
         related_name="customer",
         verbose_name="Cliente",
     )
+    tax = models.ForeignKey(Tax, on_delete=models.CASCADE, verbose_name="Impuesto")
     number = models.CharField(
         max_length=12, unique=True, editable=False, verbose_name="No. Factura"
     )
@@ -429,7 +435,7 @@ class InvoiceDetail(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="item")
     quantity = models.IntegerField(default=1)
     price = models.DecimalField(max_digits=12, decimal_places=2)
-    tax = models.DecimalField(max_digits=12, decimal_places=2)
+    # tax = models.DecimalField(max_digits=12, decimal_places=2)
     discount = models.DecimalField(max_digits=12, decimal_places=2)
 
     def inactivate(self):
