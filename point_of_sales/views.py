@@ -3,8 +3,6 @@ from django.template.loader import get_template
 from . import models
 from weasyprint import HTML
 
-# Create your views here.
-
 
 def print_invoice(request):
     if request.method == "GET":
@@ -32,16 +30,8 @@ def print_invoice(request):
                 "papel_size": papel_size,
                 "company": company_instance,
             }
-            cache = {}
-            response = HttpResponse(content_type="application/pdf")
-            response["Content-Disposition"] = "inline"
-            HTML(
-                string=template.render(context), base_url=request.build_absolute_uri()
-            ).write_pdf(response, image_cache=cache)
 
-            return response
-
-            # return HttpResponse(template.render(context))
+            return HttpResponse(template.render(context))
 
         return HttpResponse("No existe factura.")
 
@@ -82,3 +72,35 @@ def print_quotation(request):
             # return HttpResponse(template.render(context))
 
         return HttpResponse("No existe cotizacion.")
+
+
+def print_invoice_60mm(request):
+    if request.method == "GET":
+        invoice_header_id = request.GET.get("invoice_header_id", None)
+
+        if invoice_header_id:
+            invoice_header_id = int(invoice_header_id)
+            papel_size = request.GET.get("papel_size", "60mm")
+
+            invoice_header_instance = models.InvoiceHeader.objects.get(
+                pk=invoice_header_id
+            )
+            invoice_details_intance = invoice_header_instance.invoice_detail.all()
+            payment_instance = invoice_header_instance.payment.filter(status=True)
+            company_instance = models.Company.objects.get(pk=1)
+
+            template_path = "invoice_60mm.html"
+
+            template = get_template(template_path)
+
+            context = {
+                "header": invoice_header_instance,
+                "details": invoice_details_intance,
+                "payments": payment_instance,
+                "papel_size": papel_size,
+                "company": company_instance,
+            }
+
+            return HttpResponse(template.render(context))
+
+        return HttpResponse("No existe factura.")
