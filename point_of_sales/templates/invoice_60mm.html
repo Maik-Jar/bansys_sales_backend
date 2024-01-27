@@ -1,237 +1,144 @@
+{% load static tailwind_tags %}
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
   <head>
-    {% load static %}
+    <title>Factura {{header.number}}</title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script defer />
-        window.print();
-    </script>
-    <title>Factura {{header.number}}</title>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    {% tailwind_css %}
     <style>
       @page {
-        size: {{papel_size}};
-        margin: 0.2cm;
-      }
-
-      body {
-        font-family: Arial, sans-serif;
-      }
-
-      .container {
-        max-width: 800px;
-        max-height: 100vh;
-        margin: 0 auto;
-        padding: 20px;
-        background-color: #fff;
-      }
-
-      .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: top;
-        margin: 40px 0;
-      }
-
-      .header-line-two {
-        display: flex;
-        justify-content: space-between;
-        align-items: top;
-        margin: 20px 0;
-      }
-
-      .footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: top;
-        margin-bottom: 20px;
-      }
-
-      .company-info {
-        display: flex;
-        flex: 1;
-        align-items: left;
-      }
-
-      .company-logo {
-        display: flex;
-        align-items: center;
-        max-width: 200px;
-        margin-right: 20px;
-      }
-
-      .receipt-info {
-        flex: 1;
-        text-align: right;
-      }
-
-      .payments {
-        flex: 1;
-        text-align: right;
-      }
-
-      .customer-info,
-      .invoice-info,
-      .comments {
-        flex: 1;
-      }
-
-      .invoice-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 20px 0;
-      }
-
-      .th {
-        padding: 10px;
-        border: 1px solid #ddd;
-        text-align: left;
-        font-size: 14px;
-        background-color: #f2f3f8;
-      }
-
-      .td {
-        padding: 10px;
-        border: 1px solid #ddd;
-        text-align: left;
-        font-size: 14px;
-      }
-
-      .p {
-        margin: 0.2rem 0;
-        font-size: 16px;
-      }
-
-      .heading-1 {
+        size: 60mm;
         margin: 0;
-        font-size: 1.5rem;
-      }
-
-      .heading-2 {
-        margin: 0;
-        font-size: 1rem;
-      }
-
-      .mb {
-        margin-bottom: 0.5rem;
-      }
-
-      .border-bottom {
-        border-bottom: 1px;
-        border-color: gray;
-        border-bottom-style: solid;
       }
     </style>
+    <script language="javascript">
+      document.onload = window.print();
+    </script>
   </head>
   <body>
-    <div class="container">
-      <div class="header">
-        <div class="company-info">
-          <div class="company-logo">
-            <img
-              src="{{ company.logo.url }}"
-              alt="{{ company.name }}"
-              style="width: 150px; max-height: 60%"
-            />
+    <div
+      class="bg-white border rounded-lg shadow-lg px-6 py-8 max-w-md mx-auto mt-8"
+    >
+      <div class="flex flex-col justify-items-center">
+        <img
+          src="{{ company.logo.url }}"
+          alt="{{ company.name }}"
+          width="80%"
+          height="50px"
+          class="mx-auto"
+        />
+        <h1 class="font-bold text-2xl mt-4 text-center text-gray-700">
+          {{company.name|upper}}
+        </h1>
+        <p class="font-semibold text-center text-gray-700">
+          {{company.document_type.name|upper}} {{company.document_id}}
+        </p>
+        <p class="font-semibold text-center text-gray-700">
+          {{company.format_phone}}
+        </p>
+        <p class="text-center text-gray-700 mb-4">{{company.email}}</p>
+      </div>
+      <hr class="mb-2" />
+      <div class="flex justify-between mb-4">
+        <h1 class="text-gray-700 text-lg font-bold uppercase">Factura</h1>
+        <div class="text-gray-700">
+          <div>
+            <span class="font-semibold">Fecha:</span>
+            {{header.date_created|date:"d-m-Y h:i:s a"}}
           </div>
           <div>
-            <h3 class="heading-2">{{company.name|upper}}</h3>
-            <p class="p">
-              {{company.document_type.name|upper}} {{company.document_id}}
-            </p>
-            <p class="p">{{company.format_phone}}</p>
-            <p class="p">{{company.email}}</p>
+            <span class="font-semibold">Factura No.:</span> {{header.number}}
           </div>
         </div>
-        <div class="receipt-info">
-            {% if header.receipt_sequence.receipt.id != 1 %}
-                <h3 class="heading-1">{{header.receipt_sequence.receipt.name}}</h3>
-                <p class="p">
-                    {{header.receipt_sequence.receipt.serial}}{{header.receipt_sequence.sequence}}
-                </p>
-                <p class="p">{{header.receipt_sequence.expiration|date:"d-m-Y"}}</p>
-            {% endif %}
+      </div>
+      {% if header.receipt_sequence.receipt.id%}
+      <div class="mb-4">
+        <h1 class="text-gray-700 text-2xl font-bold text-center">
+          {{header.receipt_sequence.receipt.name}}
+        </h1>
+        <div class="text-gray-700 text-lg text-center">
+          <span class="font-semibold uppercase">NFC: </span
+          >{{header.receipt_sequence.receipt.serial}}{{header.receipt_sequence.sequence}}
+        </div>
+        <div class="text-gray-700 mb-2 text-lg text-center">
+          <span class="font-semibold capitalize">vigencia:</span>
+          {{header.receipt_sequence.expiration|date:"d-m-Y"}}
         </div>
       </div>
-      <div class="header-line-two">
-        <div class="customer-info">
-          <h3 class="heading-1 mb">Información del Cliente</h3>
-          <p class="p">{{header.customer.name|upper}}</p>
-          <p class="p">
-            {{header.customer.document_type.name|upper}}:
-            {{header.customer.document_id}}
-          </p>
-          <p class="p">{{header.customer.format_phone}}</p>
+      {% endif %}
+      <div class="mb-4">
+        <div class="text-gray-700 font-bold mb-2 capitalize">Cliente:</div>
+        <div class="text-gray-700">{{header.customer.name|upper}}</div>
+        <div class="flex space-x-4 text-gray-700 capitalize">
+          {{header.customer.document_type.name}}:
+          {{header.customer.document_id}}
         </div>
-        <div class="invoice-info mb">
-          <h3 class="heading-1 mb">Información de la Factura</h3>
-          <p class="p">
-            Fecha y Hora: {{header.date_created|date:"d-m-Y h:i:s a"}}
-          </p>
-          <p class="p">No. Factura: {{header.number}}</p>
-          <p class="p">Venta: {{header.sales_type.name|upper}}</p>
-          <p class="p">
-            Usuario: {{header.user_created.first_name|upper}}
-            {{header.user_created.last_name|upper}}
-          </p>
+        <div class="flex space-x-4 text-gray-700 capitalize mb-4">
+          {{header.customer.format_phone}}
+        </div>
+        <div class="text-gray-700 font-bold mb-2 capitalize">vendedor:</div>
+        <div class="text-gray-700">
+          {{header.user_created.first_name|upper}}
+          {{header.user_created.last_name|upper}}
+        </div>
+        <div class="text-gray-700 capitalize">
+          venta: {{header.sales_type.name|upper}}
         </div>
       </div>
-      <hr />
-      <table class="invoice-table">
+      <h1 class="text-center text-2xl font-bold text-gray-700 capitalize mb-1">
+        Detalle
+      </h1>
+      <hr class="mb-2" />
+      <table class="w-full mb-2">
         <thead>
           <tr>
-            <th class="th">Item</th>
-            <th class="th">Precio Und.</th>
-            <th class="th">Cant.</th>
-            <th class="th">Impuesto</th>
-            <th class="th">Desto.</th>
-            <th class="th">Monto</th>
+            <th class="text-left font-bold text-gray-700">Descripcion</th>
+            <th class="text-right font-bold text-gray-700">Cant.</th>
+            <th class="text-right font-bold text-gray-700">Monto</th>
           </tr>
         </thead>
         <tbody>
           {% for detail in details %}
           <tr>
-            <td class="td">{{detail.item.name}}</td>
-            <td class="td">{{detail.price|floatformat:2}}</td>
-            <td class="td">{{detail.quantity}}</td>
-            <td class="td">{{detail.calculateTax|floatformat:2}}</td>
-            <td class="td">{{detail.discount|floatformat:2}}</td>
-            <td class="td">{{detail.calculateAmount|floatformat:2}}</td>
+            <td class="text-left text-gray-700">{{detail.item.name}}</td>
+            <td class="text-center text-gray-700">{{detail.quantity}}</td>
+            <td class="text-right text-gray-700">
+              ${{detail.calculateAmount|floatformat:2}}
+            </td>
           </tr>
-          {%endfor%}
-        </tbody>
-        <tfooter>
-          <tr>
-            <th class="th" colspan="2">Total</th>
-            <th class="th">{{header.calculateTotalQuantity}}</th>
-            <th class="th">{{header.calculateTotalTax}}</th>
-            <th class="th">{{header.calculateTotalDiscount}}</th>
-            <th class="th">{{header.calculateTotalAmount}}</th>
-          </tr>
-        </tfooter>
-      </table>
-      <div class="footer">
-        <div class="comments">
-          <h3 class="heading-2 mb">Comentarios</h3>
-            {% if header.comment %}
-                <p class="p">{{header.comment}}</p>
-            {%endif%}
-        </div>
-        <div class="payments">
-          <h3 class="heading-2 mb">Pagos Aplicados</h3>
-          {% for payment in payments%}
-          <p class="p">
-            {{payment.payment_method.name|upper}}
-            {{payment.formatCurrencyPayment}}
-          </p>
-          {% empty %}
-          <p class="p">No se realizaron pagos</p>
           {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td class="text-left font-bold text-gray-700">Total</td>
+            <td class="text-center font-bold text-gray-700">
+              {{header.calculateTotalQuantity}}
+            </td>
+            <td class="text-right font-bold text-gray-700">
+              {{header.calculateTotalAmount}}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+      <hr class="mb-6" />
+      <div class="mb-6 text-gray-700">
+        <div class="font-bold text-gray-700 capitalize mb-2">Pagado</div>
+        {% for payment in payments %}
+        <div class="flex space-x-4">
+          <p>{{payment.payment_method.name|upper}}</p>
+          <p>.................</p>
+          <p>${{payment.formatCurrencyPayment}}</p>
         </div>
+        {% empty %}
+        <div class="text-gray-700">No se realizaron pagos</div>
+        {% endfor %}
       </div>
-      <div class="footer">
-        <p>Gracias por su compra</p>
-      </div>
+      {% if header.comment %}
+      <div class="text-gray-700 mb-2 capitalize">Comentarios:</div>
+      <div class="text-gray-700 text-sm">{{header.comment}}</div>
+      {% endif %}
     </div>
   </body>
 </html>

@@ -51,6 +51,8 @@ THIRD_PARTY_APPS = [
     "sequences.apps.SequencesConfig",
     "corsheaders",
     "rest_framework.authtoken",
+    "tailwind",
+    "theme",
 ]
 
 INSTALLED_APPS = MY_APPS + DJANGO_APPS + THIRD_PARTY_APPS
@@ -177,3 +179,11 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 30,
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
 }
+
+TAILWIND_APP_NAME = "theme"
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
+
+NPM_BIN_PATH = "C:/Program Files/nodejs/npm.cmd"
