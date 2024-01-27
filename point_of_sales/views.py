@@ -39,15 +39,11 @@ def print_invoice(request):
                 "company": company_instance,
             }
 
-<<<<<<< HEAD
             buffer.seek(0)
 
             response = FileResponse(buffer, as_attachment=True, filename="hello.pdf")
             response["Content-Disposition"] = "inline"
             return response
-=======
-            return HttpResponse(template.render(context))
->>>>>>> invoice_pdf
 
         return HttpResponse("No existe factura.")
 
