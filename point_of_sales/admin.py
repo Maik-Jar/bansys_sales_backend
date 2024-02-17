@@ -62,7 +62,7 @@ class ProviderAdmin(admin.ModelAdmin):
 @admin.register(Item)
 class ItemAdmin(admin.ModelAdmin):
     list_filter = ("name", "id", "brand", "provider", "price", "stock")
-    list_display = ("name", "id", "brand", "provider", "price", "stock")
+    list_display = ("name", "id", "brand", "price", "stock")
     readonly_fields = ("stock",)
 
 
@@ -117,7 +117,7 @@ class InvoiceHeaderAdmin(admin.ModelAdmin):
         "number",
         "customer",
         "receipt_sequence",
-        "calculateTotalAmount",
+        "calculate_total_amount",
         "status",
     )
 

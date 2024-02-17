@@ -346,7 +346,15 @@ class InvoiceHeaderApiView(generics.GenericAPIView):
                 )
                 map(lambda e: e.inanctivate(), invoice_header_instance.payment.all())
 
-                invoice_header_instance.receipt_sequence.mark_to_reuse()
+                try:
+                    receipt_sequence_instance = models.SequenceReceipt.objects.get(
+                        invoice=invoice_header_instance
+                    )
+                except:
+                    receipt_sequence_instance = None
+
+                if receipt_sequence_instance is not None:
+                    receipt_sequence_instance.inactivate()
 
                 return Response(status=status.HTTP_202_ACCEPTED)
         except models.InvoiceHeader.DoesNotExist:

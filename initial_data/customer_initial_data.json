@@ -1,1 +1,14 @@
-[{"model": "point_of_sales.customer", "pk": 1, "fields": {"name": "Contado General", "document_type": 1, "document_id": null, "email": null, "phone": "0000000000", "address": null}}]
+[
+    {
+        "model": "point_of_sales.customer",
+        "pk": 1,
+        "fields": {
+            "name": "Contado General",
+            "document_type": 1,
+            "document_id": null,
+            "email": null,
+            "phone": "0000000000",
+            "address": null
+        }
+    }
+]

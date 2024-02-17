@@ -15,14 +15,16 @@ class TaxSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Tax
         fields = "__all__"
-        read_only_fields = ["id", "name", "percentage", "status"]
+        read_only_fields = ["id"]
 
 
 class ReceiptSerializer(serializers.ModelSerializer):
+    tax = TaxSerializer(read_only=True)
+
     class Meta:
         model = models.Receipt
-        fields = ["id", "name", "serial", "expiration"]
-        read_only_fields = ["id", "name", "serial", "expiration"]
+        fields = "__all__"
+        read_only_fields = ["id"]
 
 
 class SomeFieldsReceiptSerializer(serializers.ModelSerializer):
@@ -35,11 +37,13 @@ class SomeFieldsReceiptSerializer(serializers.ModelSerializer):
         ]
 
 
-class SomeFieldsSequenceReceiptSerializer(serializers.ModelSerializer):
+class SequenceReceiptSerializer(serializers.ModelSerializer):
+    receipt = ReceiptSerializer(read_only=True)
+
     class Meta:
         model = models.SequenceReceipt
-        fields = ["id", "sequence", "receipt"]
-        read_only_fields = ["id", "sequence", "receipt"]
+        fields = "__all__"
+        read_only_fields = ["id", "sequence"]
 
 
 class CustomerSerializer(serializers.ModelSerializer):
@@ -87,8 +91,8 @@ class SomeFieldItemSerializer(serializers.ModelSerializer):
 class ItemsListSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Item
-        fields = ["id", "name", "price", "tax"]
-        read_only_fields = ["id", "name", "price", "tax"]
+        fields = ["id", "name", "price"]
+        read_only_fields = ["id", "name", "price"]
 
 
 class PaymentSerializer(serializers.ModelSerializer):
@@ -281,7 +285,7 @@ class InvoiceHeaderSerializer(serializers.ModelSerializer):
     invoice_detail = InvoiceDetailSerializer(required=True, many=True)
     payment = PaymentSerializer(required=False, many=True)
     customer = CustomerSomeFieldsSerializer(required=True)
-    receipt_sequence = SomeFieldsSequenceReceiptSerializer(read_only=True)
+    receipt_sequence = SequenceReceiptSerializer(read_only=True)
     receipt = SomeFieldsReceiptSerializer(required=True, write_only=True)
     invoice_detail_to_delete = serializers.ListField(
         child=serializers.JSONField(), required=False, write_only=True
@@ -352,9 +356,9 @@ class InvoiceHeaderSerializer(serializers.ModelSerializer):
                 invoice_detail_instance.price = invoice_detail.get(
                     "price", invoice_detail_instance.price
                 )
-                invoice_detail_instance.tax = invoice_detail.get(
-                    "tax", invoice_detail_instance.tax
-                )
+                # invoice_detail_instance.tax = invoice_detail.get(
+                #     "tax", invoice_detail_instance.tax
+                # )
                 invoice_detail_instance.discount = invoice_detail.get(
                     "discount", invoice_detail_instance.discount
                 )
@@ -386,8 +390,11 @@ class InvoiceHeaderSerializer(serializers.ModelSerializer):
                 payments_data = validated_data.pop("payment")
                 receipt_data = validated_data.pop("receipt")
 
+                receipt_instance = models.Receipt.objects.get(id=receipt_data["id"])
+
                 invoice_header = models.InvoiceHeader.objects.create(
                     customer_id=customer_data["id"],
+                    tax=(receipt_instance.tax.percentage / 100),
                     **validated_data,
                 )
 
@@ -422,6 +429,7 @@ class InvoiceHeaderSerializer(serializers.ModelSerializer):
 
                 instance.comment = validated_data.get("comment", instance.comment)
                 instance.discount = validated_data.get("discount", instance.discount)
+                instance.avance = validated_data.get("avance", instance.avance)
                 instance.sales_type = validated_data.get(
                     "sales_type", instance.sales_type
                 )

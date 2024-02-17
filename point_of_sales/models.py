@@ -137,6 +137,9 @@ class Receipt(models.Model):
     end = models.IntegerField(verbose_name="Fin secuencia")
     expiration = models.DateField(verbose_name="Fecha de expiración")
     status = models.BooleanField(default=True, verbose_name="Estado")
+    tax = models.ForeignKey(
+        Tax, default=1, on_delete=models.CASCADE, verbose_name="Impuesto"
+    )
 
     def __str__(self) -> str:
         return f"{self.name} : {self.serial}"
@@ -153,6 +156,8 @@ class Receipt(models.Model):
                 raise Exception(
                     "No se ha podido crear el comprobante por problemas internos."
                 )
+
+        return super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Comprobante"
@@ -203,9 +208,7 @@ class Item(models.Model):
         default=0, max_digits=10, decimal_places=2, verbose_name="Maximo"
     )
     is_service = models.BooleanField(default=False, verbose_name="Servicio?")
-    provider = models.ManyToManyField(
-        Provider, on_delete=models.DO_NOTHING, verbose_name="Proveedor"
-    )
+    provider = models.ManyToManyField(Provider, verbose_name="Proveedor")
     status = models.BooleanField(default=True, verbose_name="Estado")
 
     def __str__(self) -> str:
@@ -349,12 +352,17 @@ class InvoiceHeader(models.Model):
         related_name="customer",
         verbose_name="Cliente",
     )
-    tax = models.ForeignKey(Tax, on_delete=models.CASCADE, verbose_name="Impuesto")
     number = models.CharField(
         max_length=12, unique=True, editable=False, verbose_name="No. Factura"
     )
+    tax = models.DecimalField(
+        max_digits=3, decimal_places=2, default=0.00, verbose_name="Impuesto"
+    )
     discount = models.DecimalField(
         max_digits=12, decimal_places=2, default=0.00, verbose_name="Descuento"
+    )
+    avance = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0.00, verbose_name="abono"
     )
     sales_type = models.ForeignKey(
         SaleType, on_delete=models.CASCADE, verbose_name="Tipo de venta"
@@ -387,33 +395,96 @@ class InvoiceHeader(models.Model):
 
         self.save()
 
-    def calculateTotalQuantity(self):
+    def calculate_subtotal(self, use=2):
+        # 1: internal, 2: external
+        if use == 1:
+            return reduce(
+                (lambda x, y: x + y.calculate_amount(1)), self.invoice_detail.all(), 0
+            )
+        else:
+            return locale.currency(
+                reduce(
+                    (lambda x, y: x + y.calculate_amount(1)),
+                    self.invoice_detail.all(),
+                    0,
+                ),
+                grouping=True,
+            )
+
+    def calculate_total_quantity(self):
         return reduce((lambda x, y: x + y.quantity), self.invoice_detail.all(), 0)
 
-    def calculateTotalTax(self):
-        return locale.currency(
-            reduce((lambda x, y: x + y.calculateTax()), self.invoice_detail.all(), 0),
-            grouping=True,
-        )
+    def calculate_total_discount(self, use=2):
+        if use == 1:
+            return (
+                self.calculate_subtotal(1) * self.discount
+                if 0 < self.discount < 1
+                else self.discount
+            )
+        else:
+            return locale.currency(
+                (
+                    self.calculate_subtotal(1) * self.discount
+                    if self.discount < 1
+                    else self.discount
+                ),
+                grouping=True,
+            )
 
-    def calculateTotalDiscount(self):
-        return locale.currency(
-            reduce(
-                (lambda x, y: x + y.calculateDiscount()), self.invoice_detail.all(), 0
-            ),
-            grouping=True,
-        )
+    def calculate_total_tax(self, use=2):
+        if use == 1:
+            return (self.calculate_subtotal(1) - self.calculate_total_discount(1)) * (
+                self.tax
+            )
+        else:
+            return locale.currency(
+                (self.calculate_subtotal(1) - self.calculate_total_discount(1))
+                * (self.tax),
+                grouping=True,
+            )
 
-    def calculateTotalAmount(self):
-        return locale.currency(
-            reduce(
-                (lambda x, y: x + y.calculateAmount()), self.invoice_detail.all(), 0
-            ),
-            grouping=True,
-        )
+    def calculate_total_amount(self, use=2):
+        if use == 1:
+            return (
+                self.calculate_subtotal(1) - self.calculate_total_discount(1)
+            ) + self.calculate_total_tax(1)
+        else:
+            return locale.currency(
+                (self.calculate_subtotal(1) - self.calculate_total_discount(1))
+                + self.calculate_total_tax(1),
+                grouping=True,
+            )
+
+    def calculate_pending(self, use=2):
+        # 1: internal, 2: external
+        if use == 1:
+            return (
+                self.calculate_total_amount()
+                - reduce((lambda x, y: x + y.amount), self.payment.all(), 0)
+                if (
+                    self.calculate_total_amount()
+                    - reduce((lambda x, y: x + y.amount), self.payment.all(), 0)
+                )
+                > 0
+                else 0
+            )
+        else:
+            return locale.currency(
+                (
+                    self.calculate_total_amount(1)
+                    - reduce((lambda x, y: x + y.amount), self.payment.all(), 0)
+                    if (
+                        self.calculate_total_amount(1)
+                        - reduce((lambda x, y: x + y.amount), self.payment.all(), 0)
+                    )
+                    > 0
+                    else 0
+                ),
+                grouping=True,
+            )
 
     def __str__(self) -> str:
-        return f"{self.number} / {self.customer.name} / {self.calculateTotalAmount()}"
+        return f"{self.number} / {self.customer.name} / {self.calculate_total_amount()}"
 
     def save(self, *args, **kwargs):
         if not self.number:
@@ -436,23 +507,30 @@ class InvoiceDetail(models.Model):
     quantity = models.IntegerField(default=1)
     price = models.DecimalField(max_digits=12, decimal_places=2)
     # tax = models.DecimalField(max_digits=12, decimal_places=2)
-    discount = models.DecimalField(max_digits=12, decimal_places=2)
+    discount = models.DecimalField(default=0, max_digits=12, decimal_places=2)
 
     def inactivate(self):
         self.item.increase_stock(self.quantity)
 
-    def calculateDiscount(self):
+    def calculate_discount(self):
         if 0 < self.discount < 1:
             return (self.price * self.quantity) * self.discount
         return self.discount
 
-    def calculateTax(self):
-        return ((self.price * self.quantity) - self.calculateDiscount()) * self.tax
+    # def calculateTax(self):
+    #     return ((self.price * self.quantity) - self.calculateDiscount()) * self.tax
 
-    def calculateAmount(self):
-        return self.calculateTax() + (
-            self.price * self.quantity - self.calculateDiscount()
-        )
+    def calculate_amount(self, use=2):
+        # 1: internal, 2: external
+        if use == 1:
+            return (self.price * self.quantity) - self.calculate_discount()
+        else:
+            return locale.currency(
+                (self.price * self.quantity) - self.calculate_discount(), grouping=True
+            )
+
+    def format_price(self):
+        return locale.currency(self.price, grouping=True)
 
     def __str__(self) -> str:
         return f"{self.invoice_header.id} / {self.id} / {self.item.name}"
@@ -519,21 +597,24 @@ class SequenceReceipt(models.Model):
     expiration = models.DateField(verbose_name="fecha de expiración")
 
     def mark_to_reuse(self):
-        if self.receipt.expiration.year >= timezone.now().year:
-            self.to_reuse = True
-            self.invoice = None
-            self.save()
+        if self.receipt.id != 1:
+            if self.receipt.expiration.year >= timezone.now().year:
+                self.to_reuse = True
+                self.invoice = None
+                self.save()
 
     def unmark_to_reuse(self, invoive_instance):
-        self.to_reuse = False
-        self.invoice = invoive_instance
-        self.save()
+        if self.receipt.id != 1:
+            self.to_reuse = False
+            self.invoice = invoive_instance
+            self.save()
 
     def inactivate(self):
-        self.to_reuse = False
-        self.status = False
-        self.invoice = None
-        self.save()
+        if self.receipt.id != 1:
+            self.to_reuse = False
+            self.status = False
+            self.invoice = None
+            self.save()
 
     def __str__(self) -> str:
         return f"{self.receipt.name} : {self.sequence}"

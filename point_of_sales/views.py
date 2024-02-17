@@ -12,7 +12,7 @@ def print_invoice(request):
 
         if invoice_header_id:
             invoice_header_id = int(invoice_header_id)
-            papel_size = request.GET.get("papel_size", "A4")
+            papel_size = request.GET.get("papel_size", "a4")
 
             invoice_header_instance = models.InvoiceHeader.objects.get(
                 pk=invoice_header_id
@@ -21,15 +21,9 @@ def print_invoice(request):
             payment_instance = invoice_header_instance.payment.filter(status=True)
             company_instance = models.Company.objects.get(pk=1)
 
-            buffer = io.BytesIO()
+            template_path = "invoice.html"
 
-            pdf = canvas.Canvas(buffer)
-
-            pdf.drawImage(company_instance.logo.path, 25, 750, width=110, height=25)
-            pdf.drawString(150, 780, f"{company_instance.name}")
-
-            pdf.showPage()
-            pdf.save()
+            template = get_template(template_path)
 
             context = {
                 "header": invoice_header_instance,
@@ -39,11 +33,7 @@ def print_invoice(request):
                 "company": company_instance,
             }
 
-            buffer.seek(0)
-
-            response = FileResponse(buffer, as_attachment=True, filename="hello.pdf")
-            response["Content-Disposition"] = "inline"
-            return response
+            return HttpResponse(template.render(context))
 
         return HttpResponse("No existe factura.")
 
