@@ -200,6 +200,9 @@ class Item(models.Model):
     price = models.DecimalField(
         default=0, max_digits=12, decimal_places=2, verbose_name="Precio"
     )
+    discount = models.DecimalField(
+        default=0, max_digits=12, decimal_places=2, verbose_name="Descuento"
+    )
     stock = models.IntegerField(default=0)
     stock_min = models.DecimalField(
         default=0, max_digits=10, decimal_places=2, verbose_name="Minimo"

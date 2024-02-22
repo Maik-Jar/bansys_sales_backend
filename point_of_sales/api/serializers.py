@@ -89,10 +89,23 @@ class SomeFieldItemSerializer(serializers.ModelSerializer):
 
 
 class ItemsListSerializer(serializers.ModelSerializer):
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        price = float(data["price"])
+        discount = float(data["discount"])
+
+        if discount > 0:
+            data["price"] = str(
+                price - (price * discount) if 0 < discount < 1 else price - discount
+            )
+
+        data.pop("discount")
+        return data
+
     class Meta:
         model = models.Item
-        fields = ["id", "name", "price"]
-        read_only_fields = ["id", "name", "price"]
+        fields = ["id", "name", "price", "discount"]
+        read_only_fields = ["id", "name", "price", "discount"]
 
 
 class PaymentSerializer(serializers.ModelSerializer):
