@@ -116,7 +116,7 @@ class QuotationDetailSerializer(serializers.ModelSerializer):
 
 class QuotationHeaderSerializer(serializers.ModelSerializer):
     quotation_detail = QuotationDetailSerializer(required=True, many=True)
-    # customer = CustomerSomeFieldsSerializer(required=False)
+    customer = CustomerSomeFieldsSerializer(required=True)
     quotation_detail_to_delete = serializers.ListField(
         child=serializers.JSONField(), required=False, write_only=True
     )
@@ -159,11 +159,11 @@ class QuotationHeaderSerializer(serializers.ModelSerializer):
                 quotation_detail_instance.price = quotation_detail.get(
                     "price", quotation_detail_instance.price
                 )
-                quotation_detail_instance.tax = quotation_detail.get(
-                    "tax", quotation_detail_instance.tax
-                )
                 quotation_detail_instance.discount = quotation_detail.get(
                     "discount", quotation_detail_instance.discount
+                )
+                quotation_detail_instance.description = quotation_detail.get(
+                    "description", quotation_detail_instance.description
                 )
 
                 quotation_detail_instance.save()
@@ -190,22 +190,10 @@ class QuotationHeaderSerializer(serializers.ModelSerializer):
         try:
             with atomic():
                 quotation_details_data = validated_data.pop("quotation_detail")
-                # customer_data = (
-                #     validated_data.pop("customer")
-                #     if validated_data.get("customer")
-                #     else None
-                # )
-
-                # quotation_header = (
-                #     models.QuotationHeader.objects.create(
-                #         customer_id=customer_data["id"], **validated_data
-                #     )
-                #     if customer_data
-                #     else models.QuotationHeader.objects.create(**validated_data)
-                # )
+                customer_data = validated_data.pop("customer")
 
                 quotation_header = models.QuotationHeader.objects.create(
-                    **validated_data
+                    customer_id=customer_data["id"], **validated_data
                 )
 
                 if quotation_details_data is not None:
@@ -224,11 +212,8 @@ class QuotationHeaderSerializer(serializers.ModelSerializer):
         try:
             with atomic():
                 quotation_details_data = validated_data.pop("quotation_detail")
-                # customer_data = (
-                #     validated_data.pop("customer")
-                #     if validated_data.get("customer")
-                #     else None
-                # )
+                customer_data = validated_data.pop("customer")
+
                 quotation_details_to_delete_data = (
                     validated_data.pop("quotation_detail_to_delete")
                     if validated_data.get("quotation_detail_to_delete", None)
@@ -237,18 +222,14 @@ class QuotationHeaderSerializer(serializers.ModelSerializer):
 
                 instance.comment = validated_data.get("comment", instance.comment)
                 instance.discount = validated_data.get("discount", instance.discount)
+                instance.tax = validated_data.get("tax", instance.tax)
                 instance.sales_type = validated_data.get(
                     "sales_type", instance.sales_type
                 )
                 instance.user_updated = validated_data.get(
                     "user_updated", instance.user_updated
                 )
-                instance.customer = validated_data.get("customer", instance.customer)
-
-                # if customer_data:
-                #     instance.customer = models.Customer.objects.get(
-                #         pk=customer_data["id"]
-                #     )
+                instance.customer = models.Customer.objects.get(pk=customer_data["id"])
 
                 if quotation_details_to_delete_data is not None:
                     self._delete_quotation_details(
@@ -356,11 +337,11 @@ class InvoiceHeaderSerializer(serializers.ModelSerializer):
                 invoice_detail_instance.price = invoice_detail.get(
                     "price", invoice_detail_instance.price
                 )
-                # invoice_detail_instance.tax = invoice_detail.get(
-                #     "tax", invoice_detail_instance.tax
-                # )
                 invoice_detail_instance.discount = invoice_detail.get(
                     "discount", invoice_detail_instance.discount
+                )
+                invoice_detail_instance.description = invoice_detail.get(
+                    "description", invoice_detail_instance.description
                 )
 
                 invoice_detail_instance.save()
@@ -420,7 +401,6 @@ class InvoiceHeaderSerializer(serializers.ModelSerializer):
                 validated_data.pop("receipt")
                 invoice_details_data = validated_data.pop("invoice_detail")
                 customer_data = validated_data.pop("customer")
-
                 invoice_details_to_delete_data = (
                     validated_data.pop("invoice_detail_to_delete")
                     if validated_data.get("invoice_detail_to_delete", None)

@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Factura {{header.number}}</title>
+    <title>Cotizacion {{header.number}}</title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
@@ -42,32 +42,17 @@
       </div>
       <hr class="mb-2" />
       <div class="flex justify-between mb-4">
-        <h1 class="text-gray-700 text-lg font-bold uppercase">Factura</h1>
+        <h1 class="text-gray-700 text-lg font-bold uppercase">Cotización</h1>
         <div class="text-gray-700">
           <div>
             <span class="font-semibold">Fecha:</span>
             {{header.date_created|date:"d-m-Y h:i:s a"}}
           </div>
           <div>
-            <span class="font-semibold">Factura No.:</span> {{header.number}}
+            <span class="font-semibold">Cotización No.:</span> {{header.number}}
           </div>
         </div>
       </div>
-      {% if header.receipt_sequence.receipt.id%}
-      <div class="mb-4">
-        <h1 class="text-gray-700 text-2xl font-bold text-center">
-          {{header.receipt_sequence.receipt.name}}
-        </h1>
-        <div class="text-gray-700 text-lg text-center">
-          <span class="font-semibold uppercase">NFC: </span
-          >{{header.receipt_sequence.receipt.serial}}{{header.receipt_sequence.sequence}}
-        </div>
-        <div class="text-gray-700 mb-2 text-lg text-center">
-          <span class="font-semibold capitalize">vigencia:</span>
-          {{header.receipt_sequence.expiration|date:"d-m-Y"}}
-        </div>
-      </div>
-      {% endif %}
       <div class="mb-4">
         <div class="text-gray-700 font-bold mb-2 capitalize">Cliente:</div>
         <div class="text-gray-700">{{header.customer.name|upper}}</div>
@@ -139,26 +124,6 @@
           <div class="font-bold text-lg">{{header.calculate_total_amount}}</div>
         </div>
         <hr class="my-3 w-full" />
-        <div class="text-gray-700 mb-3">
-          <div class="font-semibold">Pagado:</div>
-          {% for payment in payments %}
-          <div class="flex justify-between">
-            <p>{{payment.payment_method.name|upper}}</p>
-            <p>.................</p>
-            <p>{{payment.formatCurrencyPayment}}</p>
-          </div>
-          {% empty %}
-          <div class="flex justify-between">
-            <p>No se realizaron pagos</p>
-            <p>.................</p>
-            <p>$0.00</p>
-          </div>
-          {% endfor %}
-        </div>
-        <div class="flex justify-between mb-3">
-          <div class="font-semibold mr-2">Pendiente:</div>
-          <div>{{header.calculate_pending}}</div>
-        </div>
       </div>
       {% if header.comment %}
       <div class="text-gray-700 mb-2 capitalize">Comentarios:</div>

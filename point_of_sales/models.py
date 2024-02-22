@@ -30,7 +30,7 @@ class DocumentType(models.Model):
 class Tax(models.Model):
     name = models.CharField(max_length=30, verbose_name="Nombre")
     percentage = models.DecimalField(
-        max_digits=5, decimal_places=2, verbose_name="Porcentaje"
+        max_digits=3, decimal_places=2, verbose_name="Porcentaje"
     )
     status = models.BooleanField(default=True, verbose_name="Estado")
 
@@ -235,9 +235,17 @@ class Item(models.Model):
 
 
 class QuotationHeader(models.Model):
-    customer = models.JSONField(null=True, verbose_name="Cliente")
+    customer = models.ForeignKey(
+        Customer,
+        on_delete=models.CASCADE,
+        related_name="quotation_customer",
+        verbose_name="Cliente",
+    )
     number = models.CharField(
         max_length=12, unique=True, editable=False, verbose_name="No. Cotización"
+    )
+    tax = models.DecimalField(
+        max_digits=3, decimal_places=2, default=0.00, verbose_name="Impuesto"
     )
     discount = models.DecimalField(
         max_digits=12, decimal_places=2, default=0.00, verbose_name="Descuento"
@@ -272,30 +280,65 @@ class QuotationHeader(models.Model):
         self.status = False
         self.save()
 
-    def calculateTotalQuantity(self):
+    def calculate_subtotal(self, use=2):
+        # 1: internal, 2: external
+        if use == 1:
+            return reduce(
+                (lambda x, y: x + y.calculate_amount(1)), self.quotation_detail.all(), 0
+            )
+        else:
+            return locale.currency(
+                reduce(
+                    (lambda x, y: x + y.calculate_amount(1)),
+                    self.quotation_detail.all(),
+                    0,
+                ),
+                grouping=True,
+            )
+
+    def calculate_total_quantity(self):
         return reduce((lambda x, y: x + y.quantity), self.quotation_detail.all(), 0)
 
-    def calculateTotalTax(self):
-        return locale.currency(
-            reduce((lambda x, y: x + y.calculateTax()), self.quotation_detail.all(), 0),
-            grouping=True,
-        )
+    def calculate_total_discount(self, use=2):
+        if use == 1:
+            return (
+                self.calculate_subtotal(1) * self.discount
+                if 0 < self.discount < 1
+                else self.discount
+            )
+        else:
+            return locale.currency(
+                (
+                    self.calculate_subtotal(1) * self.discount
+                    if self.discount < 1
+                    else self.discount
+                ),
+                grouping=True,
+            )
 
-    def calculateTotalDiscount(self):
-        return locale.currency(
-            reduce(
-                (lambda x, y: x + y.calculateDiscount()), self.quotation_detail.all(), 0
-            ),
-            grouping=True,
-        )
+    def calculate_total_tax(self, use=2):
+        if use == 1:
+            return (self.calculate_subtotal(1) - self.calculate_total_discount(1)) * (
+                self.tax
+            )
+        else:
+            return locale.currency(
+                (self.calculate_subtotal(1) - self.calculate_total_discount(1))
+                * (self.tax),
+                grouping=True,
+            )
 
-    def calculateTotalAmount(self):
-        return locale.currency(
-            reduce(
-                (lambda x, y: x + y.calculateAmount()), self.quotation_detail.all(), 0
-            ),
-            grouping=True,
-        )
+    def calculate_total_amount(self, use=2):
+        if use == 1:
+            return (
+                self.calculate_subtotal(1) - self.calculate_total_discount(1)
+            ) + self.calculate_total_tax(1)
+        else:
+            return locale.currency(
+                (self.calculate_subtotal(1) - self.calculate_total_discount(1))
+                + self.calculate_total_tax(1),
+                grouping=True,
+            )
 
     def __str__(self) -> str:
         return f"{self.id} / {self.customer.name}"
@@ -305,9 +348,6 @@ class QuotationHeader(models.Model):
             self.number = f"{timezone.now().year}" + str(
                 sequence_generated(f"quotation_number-{timezone.now().year}")
             ).zfill(5)
-
-        if self.customer is not None:
-            self.customer["name"] = self.customer["name"].upper()
 
         return super().save(*args, **kwargs)
 
@@ -325,24 +365,35 @@ class QuotationDetail(models.Model):
     )
     quantity = models.IntegerField(default=1)
     price = models.DecimalField(max_digits=12, decimal_places=2)
-    tax = models.DecimalField(max_digits=12, decimal_places=2)
-    discount = models.DecimalField(max_digits=12, decimal_places=2)
+    discount = models.DecimalField(default=0, max_digits=12, decimal_places=2)
+    description = models.CharField(
+        blank=True, null=True, max_length=4000, verbose_name="Descripcion"
+    )
 
-    def calculateDiscount(self):
+    def calculate_discount(self):
         if 0 < self.discount < 1:
             return (self.price * self.quantity) * self.discount
         return self.discount
 
-    def calculateTax(self):
-        return ((self.price * self.quantity) - self.calculateDiscount()) * self.tax
+    def calculate_amount(self, use=2):
+        # 1: internal, 2: external
+        if use == 1:
+            return (self.price * self.quantity) - self.calculate_discount()
+        else:
+            return locale.currency(
+                (self.price * self.quantity) - self.calculate_discount(), grouping=True
+            )
 
-    def calculateAmount(self):
-        return self.calculateTax() + (
-            self.price * self.quantity - self.calculateDiscount()
-        )
+    def format_price(self):
+        return locale.currency(self.price, grouping=True)
 
     def __str__(self) -> str:
         return f"{self.quotation_header.id} / {self.id} / {self.item.name}"
+
+    def delete(self, *args, **kwargs):
+        self.item.increase_stock(self.quantity)
+
+        return super().delete(*args, **kwargs)
 
 
 class InvoiceHeader(models.Model):
@@ -506,8 +557,10 @@ class InvoiceDetail(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="item")
     quantity = models.IntegerField(default=1)
     price = models.DecimalField(max_digits=12, decimal_places=2)
-    # tax = models.DecimalField(max_digits=12, decimal_places=2)
     discount = models.DecimalField(default=0, max_digits=12, decimal_places=2)
+    description = models.CharField(
+        blank=True, null=True, max_length=4000, verbose_name="Descripcion"
+    )
 
     def inactivate(self):
         self.item.increase_stock(self.quantity)
@@ -516,9 +569,6 @@ class InvoiceDetail(models.Model):
         if 0 < self.discount < 1:
             return (self.price * self.quantity) * self.discount
         return self.discount
-
-    # def calculateTax(self):
-    #     return ((self.price * self.quantity) - self.calculateDiscount()) * self.tax
 
     def calculate_amount(self, use=2):
         # 1: internal, 2: external
