@@ -385,10 +385,10 @@ class InvoiceHeaderSerializer(serializers.ModelSerializer):
                 receipt_data = validated_data.pop("receipt")
 
                 receipt_instance = models.Receipt.objects.get(id=receipt_data["id"])
+                validated_data["tax"] = receipt_instance.tax.percentage
 
                 invoice_header = models.InvoiceHeader.objects.create(
                     customer_id=customer_data["id"],
-                    tax=(receipt_instance.tax.percentage / 100),
                     **validated_data,
                 )
 
