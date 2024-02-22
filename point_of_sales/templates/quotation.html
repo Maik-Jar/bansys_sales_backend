@@ -80,7 +80,7 @@
             {% for detail in details %}
                 <tr>
                     <td class="text-left py-2 text-gray-700">{{detail.item.name}}
-                        {%if detail.description%}:<div class="font-semibold">{{detail.description}}</div>{%endif%}
+                        {%if detail.description%}:<div class="font-semibold text-xs">{{detail.description}}</div>{%endif%}
                     </td>
                     <td class="text-center py-2 text-gray-700">{{detail.quantity}}</td>
                     <td class="text-center py-2 text-gray-700">{{detail.format_price}}</td>

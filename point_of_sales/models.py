@@ -16,11 +16,18 @@ def sequence_generated(name):
 
 
 class DocumentType(models.Model):
-    name = models.CharField(max_length=30, verbose_name="Nombre")
+    name = models.CharField(
+        max_length=30,
+        verbose_name="Nombre",
+    )
     status = models.BooleanField(default=True, verbose_name="Estado")
 
     def __str__(self) -> str:
         return self.name
+
+    def save(self, *args, **kwargs):
+        self.name = self.name.upper()
+        return super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Tipo de documento"
@@ -37,6 +44,10 @@ class Tax(models.Model):
     def __str__(self) -> str:
         return self.name
 
+    def save(self, *args, **kwargs):
+        self.name = self.name.upper()
+        return super().save(*args, **kwargs)
+
     class Meta:
         verbose_name = "Impuesto"
         verbose_name_plural = "Impuestos"
@@ -49,6 +60,10 @@ class PaymentMethod(models.Model):
     def __str__(self) -> str:
         return self.name
 
+    def save(self, *args, **kwargs):
+        self.name = self.name.upper()
+        return super().save(*args, **kwargs)
+
     class Meta:
         verbose_name = "Metodo de pago"
         verbose_name_plural = "Metodos de pago"
@@ -60,6 +75,10 @@ class SaleType(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+    def save(self, *args, **kwargs):
+        self.name = self.name.upper()
+        return super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Tipo de venta"
@@ -90,6 +109,10 @@ class Company(models.Model):
     def __str__(self) -> str:
         return self.name
 
+    def save(self, *args, **kwargs):
+        self.name = self.name.upper()
+        return super().save(*args, **kwargs)
+
     class Meta:
         verbose_name = "Compañia"
         verbose_name_plural = "Compañias"
@@ -118,6 +141,10 @@ class Customer(models.Model):
     def __str__(self) -> str:
         return self.name
 
+    def save(self, *args, **kwargs):
+        self.name = self.name.upper()
+        return super().save(*args, **kwargs)
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -145,6 +172,8 @@ class Receipt(models.Model):
         return f"{self.name} : {self.serial}"
 
     def save(self, *args, **kwargs):
+        self.name = self.name.upper()
+
         if not self.id:
             try:
                 with transaction.atomic():
@@ -179,6 +208,10 @@ class Provider(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+    def save(self, *args, **kwargs):
+        self.name = self.name.upper()
+        return super().save(*args, **kwargs)
 
     class Meta:
         constraints = [
@@ -216,6 +249,10 @@ class Item(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+    def save(self, *args, **kwargs):
+        self.name = self.name.upper()
+        return super().save(*args, **kwargs)
 
     def increase_stock(self, quantity):
         if not self.is_service:
@@ -713,6 +750,8 @@ class Output(models.Model):
         return f"{self.item.name} / {self.departure_date}"
 
     def save(self, *args, **kwargs):
+        self.reason = self.reason.upper()
+
         if self.item.stock < 1 or self.quantity > self.item.stock:
             raise Exception("La cantidad que intenta descontar es mayor que el stock.")
         if self.item.is_service:
@@ -734,8 +773,12 @@ class Input(models.Model):
     provider = models.ForeignKey(
         Provider, on_delete=models.CASCADE, verbose_name="Proveedor"
     )
-    purchase_order = models.CharField(max_length=12, verbose_name="Orden de compra")
-    invoice_number = models.CharField(max_length=12, verbose_name="No. Factura")
+    purchase_order = models.CharField(
+        blank=True, null=True, max_length=12, verbose_name="Orden de compra"
+    )
+    invoice_number = models.CharField(
+        blank=True, null=True, max_length=12, verbose_name="No. Factura"
+    )
     date_of_entry = models.DateTimeField(
         auto_now_add=True, verbose_name="Fecha de entrada"
     )
@@ -769,6 +812,8 @@ class Return(models.Model):
         return f"{self.item.name} / {self.return_date}"
 
     def save(self, *args, **kwargs):
+        self.reason = self.reason.upper()
+
         if self.item.is_service:
             raise Exception("No se aumenta de stock cuando es un servicio.")
         else:
