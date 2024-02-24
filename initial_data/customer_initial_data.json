@@ -3,7 +3,7 @@
         "model": "point_of_sales.customer",
         "pk": 1,
         "fields": {
-            "name": "Contado General",
+            "name": "CONTADO GENERAL",
             "document_type": 1,
             "document_id": null,
             "email": null,

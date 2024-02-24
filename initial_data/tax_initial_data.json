@@ -1,1 +1,20 @@
-[{"model": "point_of_sales.tax", "pk": 1, "fields": {"name": "ITBIS", "percentage": "18.00", "status": true}}]
+[
+    {
+        "model": "point_of_sales.tax",
+        "pk": 1,
+        "fields": {
+            "name": "ITBIS",
+            "percentage": "0.18",
+            "status": true
+        }
+    },
+    {
+        "model": "point_of_sales.tax",
+        "pk": 2,
+        "fields": {
+            "name": "SIN IMP",
+            "percentage": "0.00",
+            "status": true
+        }
+    }
+]

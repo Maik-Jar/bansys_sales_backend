@@ -1,1 +1,34 @@
-[{"model": "point_of_sales.paymentmethod", "pk": 1, "fields": {"name": "Efectivo", "status": true}}, {"model": "point_of_sales.paymentmethod", "pk": 2, "fields": {"name": "Tarjeta", "status": true}}, {"model": "point_of_sales.paymentmethod", "pk": 3, "fields": {"name": "Cheque", "status": true}}, {"model": "point_of_sales.paymentmethod", "pk": 4, "fields": {"name": "Transferencia", "status": true}}]
+[
+    {
+        "model": "point_of_sales.paymentmethod",
+        "pk": 1,
+        "fields": {
+            "name": "EFECTIVO",
+            "status": true
+        }
+    },
+    {
+        "model": "point_of_sales.paymentmethod",
+        "pk": 2,
+        "fields": {
+            "name": "TARJETA",
+            "status": true
+        }
+    },
+    {
+        "model": "point_of_sales.paymentmethod",
+        "pk": 3,
+        "fields": {
+            "name": "CHEQUE",
+            "status": true
+        }
+    },
+    {
+        "model": "point_of_sales.paymentmethod",
+        "pk": 4,
+        "fields": {
+            "name": "TRANSFERENCIA",
+            "status": true
+        }
+    }
+]
