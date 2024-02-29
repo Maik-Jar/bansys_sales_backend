@@ -5,7 +5,7 @@
         "fields": {
             "name": "CONTADO GENERAL",
             "document_type": 1,
-            "document_id": null,
+            "document_id": "00000000000",
             "email": null,
             "phone": "0000000000",
             "address": null
