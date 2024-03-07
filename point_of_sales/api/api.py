@@ -8,31 +8,6 @@ from .. import models
 from . import serializers
 
 
-# class LoginAPIView(generics.GenericAPIView):
-#     permission_classes = [permissions.AllowAny]
-#     serializer_class = serializers.LoginSerializer
-
-#     def post(self, request):
-#         serializer = self.serializer_class(data=request.data)
-#         try:
-#             if serializer.is_valid():
-#                 login(request, serializer.validated_data)
-#                 return Response({"is_login": True}, status=status.HTTP_200_OK)
-
-#             return Response(status=status.HTTP_403_FORBIDDEN)
-#         except:
-#             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-# class LogoutAPIView(generics.GenericAPIView):
-#     permission_classes = [permissions.IsAuthenticated]
-#     serializer_class = serializers.LoginSerializer
-
-#     def get(self, request):
-#         logout(request)
-#         return Response(status=status.HTTP_200_OK)
-
-
 class DocumentTypeAPIView(generics.GenericAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = serializers.DocumentTypeSerializer

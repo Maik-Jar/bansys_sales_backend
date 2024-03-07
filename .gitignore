@@ -1,5 +1,5 @@
 env
 db.sqlite3
-bansysSales.code-workspace
+ws_bansysSales.code-workspace
 .dockerignore
 django.Dockerfile
