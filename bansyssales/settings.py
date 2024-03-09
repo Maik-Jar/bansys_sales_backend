@@ -36,6 +36,12 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 MY_APPS = [
     "point_of_sales",
+    "master_data",
+    "customers",
+    "inventory",
+    "accounting",
+    "products_and_services",
+    "purchases_and_providers",
 ]
 
 DJANGO_APPS = [

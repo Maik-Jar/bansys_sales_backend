@@ -2,39 +2,10 @@ from rest_framework import serializers
 from django.db.transaction import atomic
 from django.db import IntegrityError
 from .. import models
-
-
-class DocumentTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.DocumentType
-        fields = "__all__"
-        read_only_fields = ("id", "name")
-
-
-class TaxSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Tax
-        fields = "__all__"
-        read_only_fields = ["id"]
-
-
-class ReceiptSerializer(serializers.ModelSerializer):
-    tax = TaxSerializer(read_only=True)
-
-    class Meta:
-        model = models.Receipt
-        fields = "__all__"
-        read_only_fields = ["id"]
-
-
-class SomeFieldsReceiptSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField()
-
-    class Meta:
-        model = models.Receipt
-        fields = [
-            "id",
-        ]
+from master_data.api.serializers import ReceiptSerializer, SomeFieldsReceiptSerializer
+from customers.api.serializers import CustomerSomeFieldsSerializer
+from products_and_services.api.serializers import SomeFieldItemSerializer
+from accounting.api.serializers import PaymentSerializer
 
 
 class SequenceReceiptSerializer(serializers.ModelSerializer):
@@ -44,77 +15,6 @@ class SequenceReceiptSerializer(serializers.ModelSerializer):
         model = models.SequenceReceipt
         fields = "__all__"
         read_only_fields = ["id", "sequence"]
-
-
-class CustomerSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Customer
-        fields = "__all__"
-        read_only_fields = ("id",)
-
-
-class CustomerSomeFieldsSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField()
-
-    class Meta:
-        model = models.Customer
-        fields = ["id", "name"]
-        read_only_fields = ["name"]
-
-
-class ProviderSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Provider
-        fields = "__all__"
-        read_only_fields = ("id",)
-
-
-class ItemSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Item
-        fields = "__all__"
-        read_only_fields = (
-            "id",
-            "stock",
-        )
-
-
-class SomeFieldItemSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField()
-
-    class Meta:
-        model = models.Item
-        fields = ["id", "name"]
-        read_only_fields = ["name"]
-
-
-class ItemsListSerializer(serializers.ModelSerializer):
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        price = float(data["price"])
-        discount = float(data["discount"])
-
-        if discount > 0:
-            data["price"] = str(
-                price - (price * discount) if 0 < discount < 1 else price - discount
-            )
-
-        data.pop("discount")
-        return data
-
-    class Meta:
-        model = models.Item
-        fields = ["id", "name", "price", "discount"]
-        read_only_fields = ["id", "name", "price", "discount"]
-
-
-class PaymentSerializer(serializers.ModelSerializer):
-    id = serializers.CharField()
-
-    class Meta:
-        model = models.Payment
-        fields = "__all__"
-        read_only_fields = ("invoice",)
 
 
 class QuotationDetailSerializer(serializers.ModelSerializer):
@@ -451,17 +351,3 @@ class InvoiceHeaderSerializer(serializers.ModelSerializer):
         except Exception as e:
             print("#### InvoiceHeaderSerializer > update > Exception: \n", e)
             return e
-
-
-class PaymentMethodSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.PaymentMethod
-        fields = "__all__"
-        read_only_fields = ("id", "name", "status")
-
-
-class SalesTypesSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.SaleType
-        fields = "__all__"
-        read_only_fields = ("id", "name", "status")
