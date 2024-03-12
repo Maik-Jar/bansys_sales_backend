@@ -2,14 +2,17 @@ from rest_framework import serializers
 from django.db.transaction import atomic
 from django.db import IntegrityError
 from .. import models
-from master_data.api.serializers import ReceiptSerializer, SomeFieldsReceiptSerializer
+from master_data.api.serializers import (
+    ReceiptReadSerializer,
+    SomeFieldsReceiptSerializer,
+)
 from customers.api.serializers import CustomerSomeFieldsSerializer
 from products_and_services.api.serializers import SomeFieldItemSerializer
 from accounting.api.serializers import PaymentSerializer
 
 
 class SequenceReceiptSerializer(serializers.ModelSerializer):
-    receipt = ReceiptSerializer(read_only=True)
+    receipt = ReceiptReadSerializer(read_only=True)
 
     class Meta:
         model = models.SequenceReceipt

@@ -9,7 +9,9 @@ class Provider(models.Model):
     document_type = models.ForeignKey(
         DocumentType, on_delete=models.CASCADE, verbose_name="Tipo de documento"
     )
-    document_id = models.CharField(max_length=15, verbose_name="No. Documento")
+    document_id = models.CharField(
+        max_length=15, null=True, verbose_name="No. Documento"
+    )
     email = models.EmailField(blank=True, null=True, verbose_name="Correo")
     phone = models.CharField(max_length=10, verbose_name="Teléfono")
     address = models.CharField(
@@ -29,6 +31,7 @@ class Provider(models.Model):
             models.UniqueConstraint(
                 fields=["document_type", "document_id"],
                 name="unique_provide_document_type_and_id",
+                condition=models.Q(document_id__isnull=False),
             ),
         ]
         verbose_name = "Proveedor"

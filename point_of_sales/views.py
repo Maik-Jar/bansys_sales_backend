@@ -1,5 +1,6 @@
 from django.http import HttpResponse
 from . import models
+from master_data.models import Company
 from django.template.loader import get_template
 
 
@@ -16,7 +17,7 @@ def print_invoice(request):
             )
             invoice_details_intance = invoice_header_instance.invoice_detail.all()
             payment_instance = invoice_header_instance.payment.filter(status=True)
-            company_instance = models.Company.objects.get(pk=1)
+            company_instance = Company.objects.get(pk=1)
 
             template_path = "invoice.html"
 
@@ -48,7 +49,7 @@ def print_invoice_60mm(request):
             )
             invoice_details_intance = invoice_header_instance.invoice_detail.all()
             payment_instance = invoice_header_instance.payment.filter(status=True)
-            company_instance = models.Company.objects.get(pk=1)
+            company_instance = Company.objects.get(pk=1)
 
             template_path = "invoice_60mm.html"
 
@@ -79,7 +80,7 @@ def print_quotation(request):
                 pk=quotation_header_id
             )
             quotation_details_intance = quotation_header_instance.quotation_detail.all()
-            company_instance = models.Company.objects.get(pk=1)
+            company_instance = Company.objects.get(pk=1)
 
             template_path = "quotation.html"
 
@@ -109,7 +110,7 @@ def print_quotation_60mm(request):
                 pk=quotation_header_id
             )
             quotation_details_intance = quotation_header_instance.quotation_detail.all()
-            company_instance = models.Company.objects.get(pk=1)
+            company_instance = Company.objects.get(pk=1)
 
             template_path = "quotation_60mm.html"
 

@@ -68,3 +68,13 @@ class ProviderApiView(generics.GenericAPIView):
             return Response(f"{e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:
             return Response(f"{e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ProviderListAPIView(generics.ListAPIView):
+    permission_classes = [permissions.AllowAny]
+    serializer_class = serializers.ProviderReadSerializer
+    queryset = models.Provider.objects.all()
+
+    def get(self, request):
+        serializer = self.serializer_class(self.queryset.filter(status=True), many=True)
+        return Response(serializer.data)
