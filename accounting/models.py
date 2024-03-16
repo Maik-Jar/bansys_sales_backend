@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 from master_data.models import PaymentMethod
 from point_of_sales.models import InvoiceHeader
 from customers.models import Customer
@@ -28,13 +29,45 @@ class Payment(models.Model):
     date_updated = models.DateTimeField(
         auto_now=True, verbose_name="Fecha de actualización"
     )
+    user_created = models.ForeignKey(
+        User,
+        on_delete=models.DO_NOTHING,
+        editable=False,
+        related_name="payment_user_created",
+        verbose_name="Creado por",
+    )
+    user_updated = models.ForeignKey(
+        User,
+        on_delete=models.DO_NOTHING,
+        editable=False,
+        related_name="payment_user_updated",
+        verbose_name="Modificado por",
+    )
+    inactive_comment = models.CharField(max_length=250, null=True, blank=True)
 
-    def inactivate(self):
+    def inactivate(self, comment, user):
         self.status = False
+        self.user_updated = user
+        self.inactive_comment = f"""Inactivado por: {user.first_name.upper()} {user.last_name.upper()} ({user.username}). \nMotivo: {comment}"""
         self.save()
+
+        if 0 < self.invoice.calculate_pending(1):
+            self.invoice.pending_payment = True
+            self.invoice.save()
 
     def formatCurrencyPayment(self):
         return locale.currency(self.amount, grouping=True)
+
+    def save(self, *args, **kwargs) -> None:
+        if not self.id:
+            if self.invoice.pending_payment:
+                if self.amount >= self.invoice.calculate_pending(1):
+                    self.invoice.pending_payment = False
+                    self.invoice.save()
+            else:
+                raise ("Esta factura no esta pendiente de pago.")
+
+        return super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Pago"

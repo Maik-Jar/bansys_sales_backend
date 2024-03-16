@@ -4,6 +4,7 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from django.db.transaction import atomic
+from django.contrib.auth.models import User
 from .. import models
 from . import serializers
 
@@ -77,13 +78,22 @@ class InvoiceHeaderApiView(generics.GenericAPIView):
         invoice_header_id = request.query_params.get("invoice_header_id", None)
         try:
             with atomic():
+                user_instance = User.objects.get(pk=request.user.id)
+
                 invoice_header_instance = self.queryset.get(pk=invoice_header_id)
-                invoice_header_instance.inactivate()
+                invoice_header_instance.inactivate(
+                    request.data["inactivate_comment"], user_instance
+                )
                 map(
                     lambda e: e.inactivate(),
                     invoice_header_instance.invoice_detail.all(),
                 )
-                map(lambda e: e.inanctivate(), invoice_header_instance.payment.all())
+                map(
+                    lambda e: e.inactivate(
+                        request.data["inactivate_comment"], user_instance
+                    ),
+                    invoice_header_instance.payment.all(),
+                )
 
                 try:
                     receipt_sequence_instance = models.SequenceReceipt.objects.get(
@@ -100,6 +110,30 @@ class InvoiceHeaderApiView(generics.GenericAPIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response(f"{e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class InvoiceHeaderListAPIView(generics.ListAPIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [
+        permissions.IsAuthenticated,
+        permissions.DjangoModelPermissions | permissions.IsAdminUser,
+    ]
+    serializer_class = serializers.InvoiceHeaderReadSerializer
+    queryset = models.InvoiceHeader.objects.all()
+    filter_backends = (filters.SearchFilter,)
+    search_fields = [
+        "customer__name",
+        "customer__phone",
+        "customer__document_id",
+        "number",
+    ]
+
+    def get(self, request):
+        invoices_headers_list = self.filter_queryset(
+            self.queryset.filter(status=True, pending_payment=True)
+        )
+        serializer = self.serializer_class(invoices_headers_list, many=True)
+        return self.get_paginated_response(self.paginate_queryset(serializer.data))
 
 
 class QuotationHeaderApiView(generics.GenericAPIView):

@@ -184,5 +184,7 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
-if not PRODUCTION:
-    NPM_BIN_PATH = "C:/Program Files/nodejs/npm.cmd"
+# if not PRODUCTION:
+NPM_BIN_PATH = "C:/Program Files/nodejs/npm.cmd"
+
+# FIXME: REVISAR LA VARIBLE PRODUCCION EN EL settings.py

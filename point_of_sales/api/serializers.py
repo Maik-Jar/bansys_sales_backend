@@ -211,10 +211,11 @@ class InvoiceHeaderSerializer(serializers.ModelSerializer):
             )
             invoice_detail_instance.item.decrease_stock(invoice_detail_data["quantity"])
 
-    def _create_payments(self, invoice_header_instance, payments_datalist):
+    def _create_payments(self, invoice_header_instance, payments_datalist, user):
         for payment_data in payments_datalist:
-            payment_data.pop("id")
-            invoice_header_instance.payment.create(**payment_data)
+            invoice_header_instance.payment.create(
+                user_created=user, user_updated=user, **payment_data
+            )
 
     def _create_sequence_receipt(self, receipt, invoice_instance):
         sequence_receipt = models.SequenceReceipt.objects.filter(
@@ -286,7 +287,6 @@ class InvoiceHeaderSerializer(serializers.ModelSerializer):
                 customer_data = validated_data.pop("customer")
                 payments_data = validated_data.pop("payment")
                 receipt_data = validated_data.pop("receipt")
-
                 receipt_instance = models.Receipt.objects.get(id=receipt_data["id"])
                 validated_data["tax"] = receipt_instance.tax.percentage
 
@@ -304,7 +304,9 @@ class InvoiceHeaderSerializer(serializers.ModelSerializer):
                     raise Exception("La factura debe tener al menos un detalle.")
 
                 if payments_data is not None:
-                    self._create_payments(invoice_header, payments_data)
+                    self._create_payments(
+                        invoice_header, payments_data, validated_data["user_created"]
+                    )
 
             return invoice_header
         except Exception as e:
@@ -354,3 +356,44 @@ class InvoiceHeaderSerializer(serializers.ModelSerializer):
         except Exception as e:
             print("#### InvoiceHeaderSerializer > update > Exception: \n", e)
             return e
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["payment"] = filter(lambda e: e["status"] is True, data["payment"])
+        return data
+
+
+class InvoiceHeaderReadSerializer(serializers.ModelSerializer):
+    customer = CustomerSomeFieldsSerializer(read_only=True)
+    receipt_sequence = SequenceReceiptSerializer(read_only=True)
+    total = serializers.DecimalField(max_digits=12, decimal_places=2)
+
+    class Meta:
+        model = models.InvoiceHeader
+        fields = [
+            "id",
+            "number",
+            "customer",
+            "receipt_sequence",
+            "sales_type",
+            "pending_payment",
+            "date_created",
+            "total",
+        ]
+        read_only_fields = (
+            "id",
+            "number",
+            "customer",
+            "receipt_sequence",
+            "sales_type",
+            "pending_payment",
+            "date_created",
+            "total",
+        )
+
+    def to_representation(self, instance):
+        instance.total = 0
+        data = super().to_representation(instance)
+        data["total"] = instance.calculate_total_amount(1)
+
+        return data

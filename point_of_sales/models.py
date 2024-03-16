@@ -196,9 +196,6 @@ class InvoiceHeader(models.Model):
     discount = models.DecimalField(
         max_digits=12, decimal_places=2, default=0.00, verbose_name="Descuento"
     )
-    avance = models.DecimalField(
-        max_digits=12, decimal_places=2, default=0.00, verbose_name="abono"
-    )
     sales_type = models.ForeignKey(
         SaleType, on_delete=models.CASCADE, verbose_name="Tipo de venta"
     )
@@ -224,10 +221,17 @@ class InvoiceHeader(models.Model):
         verbose_name="Actualizado por",
     )
     status = models.BooleanField(default=True, editable=False, verbose_name="Estado")
+    pending_payment = models.BooleanField(
+        default=True, editable=False, verbose_name="pendiente de pago"
+    )
+    inactive_comment = models.CharField(max_length=200, null=True, blank=True)
 
-    def inactivate(self):
+    def inactivate(self, comment, user):
         self.status = False
-
+        self.user_updated = user
+        self.inactive_comment = f"""Inactivado por: {user.first_name.upper()} {user.last_name.upper()} ({user.username}). \nMotivo: {comment}"""
+        if self.pending_payment:
+            self.pending_payment = False
         self.save()
 
     def calculate_subtotal(self, use=2):
@@ -294,11 +298,15 @@ class InvoiceHeader(models.Model):
         # 1: internal, 2: external
         if use == 1:
             return (
-                self.calculate_total_amount()
-                - reduce((lambda x, y: x + y.amount), self.payment.all(), 0)
+                self.calculate_total_amount(1)
+                - reduce(
+                    (lambda x, y: x + y.amount), self.payment.filter(status=True), 0
+                )
                 if (
-                    self.calculate_total_amount()
-                    - reduce((lambda x, y: x + y.amount), self.payment.all(), 0)
+                    self.calculate_total_amount(1)
+                    - reduce(
+                        (lambda x, y: x + y.amount), self.payment.filter(status=True), 0
+                    )
                 )
                 > 0
                 else 0
@@ -307,10 +315,16 @@ class InvoiceHeader(models.Model):
             return locale.currency(
                 (
                     self.calculate_total_amount(1)
-                    - reduce((lambda x, y: x + y.amount), self.payment.all(), 0)
+                    - reduce(
+                        (lambda x, y: x + y.amount), self.payment.filter(status=True), 0
+                    )
                     if (
                         self.calculate_total_amount(1)
-                        - reduce((lambda x, y: x + y.amount), self.payment.all(), 0)
+                        - reduce(
+                            (lambda x, y: x + y.amount),
+                            self.payment.filter(status=True),
+                            0,
+                        )
                     )
                     > 0
                     else 0
