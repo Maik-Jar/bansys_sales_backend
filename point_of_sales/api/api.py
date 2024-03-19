@@ -81,29 +81,10 @@ class InvoiceHeaderApiView(generics.GenericAPIView):
                 user_instance = User.objects.get(pk=request.user.id)
 
                 invoice_header_instance = self.queryset.get(pk=invoice_header_id)
+
                 invoice_header_instance.inactivate(
                     request.data["inactivate_comment"], user_instance
                 )
-                map(
-                    lambda e: e.inactivate(),
-                    invoice_header_instance.invoice_detail.all(),
-                )
-                map(
-                    lambda e: e.inactivate(
-                        request.data["inactivate_comment"], user_instance
-                    ),
-                    invoice_header_instance.payment.all(),
-                )
-
-                try:
-                    receipt_sequence_instance = models.SequenceReceipt.objects.get(
-                        invoice=invoice_header_instance
-                    )
-                except:
-                    receipt_sequence_instance = None
-
-                if receipt_sequence_instance is not None:
-                    receipt_sequence_instance.inactivate()
 
                 return Response(status=status.HTTP_202_ACCEPTED)
         except models.InvoiceHeader.DoesNotExist:

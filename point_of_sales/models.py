@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from django.contrib.auth.models import User
 from master_data.models import SaleType, Receipt
 from customers.models import Customer
@@ -227,12 +227,25 @@ class InvoiceHeader(models.Model):
     inactive_comment = models.CharField(max_length=200, null=True, blank=True)
 
     def inactivate(self, comment, user):
-        self.status = False
-        self.user_updated = user
-        self.inactive_comment = f"""Inactivado por: {user.first_name.upper()} {user.last_name.upper()} ({user.username}). \nMotivo: {comment}"""
-        if self.pending_payment:
-            self.pending_payment = False
-        self.save()
+        with transaction.atomic():
+            # Inactivate Header
+            self.status = False
+            self.user_updated = user
+            self.inactive_comment = f"""Inactivado por: {user.first_name.upper()} {user.last_name.upper()} ({user.username}). \nMotivo: {comment}."""
+            if self.pending_payment:
+                self.pending_payment = False
+            self.save()
+            # Inactivate Details
+            for detail in self.invoice_detail.all():
+                detail.inactivate()
+            # Inactivate payments
+            for pay in self.payment.filter(status=True):
+                pay.inactivate(comment, user)
+            # Inactivate receipt
+            try:
+                self.receipt_sequence.get().inactivate()
+            except:
+                return
 
     def calculate_subtotal(self, use=2):
         # 1: internal, 2: external
@@ -418,17 +431,17 @@ class SequenceReceipt(models.Model):
                 self.invoice = None
                 self.save()
 
-    def unmark_to_reuse(self, invoive_instance):
+    def unmark_to_reuse(self, invoice_instance):
         if self.receipt.id != 1:
             self.to_reuse = False
-            self.invoice = invoive_instance
+            self.invoice = invoice_instance
             self.save()
 
     def inactivate(self):
         if self.receipt.id != 1:
             self.to_reuse = False
             self.status = False
-            self.invoice = None
+            # self.invoice = None
             self.save()
 
     def __str__(self) -> str:

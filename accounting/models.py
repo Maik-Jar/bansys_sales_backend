@@ -17,7 +17,7 @@ class Payment(models.Model):
         InvoiceHeader,
         on_delete=models.CASCADE,
         related_name="payment",
-        verbose_name="Factura",
+        verbose_name="Pago",
     )
     payment_method = models.ForeignKey(
         PaymentMethod, on_delete=models.CASCADE, verbose_name="Método de pago"
@@ -48,12 +48,13 @@ class Payment(models.Model):
     def inactivate(self, comment, user):
         self.status = False
         self.user_updated = user
-        self.inactive_comment = f"""Inactivado por: {user.first_name.upper()} {user.last_name.upper()} ({user.username}). \nMotivo: {comment}"""
+        self.inactive_comment = f"""Inactivado por: {user.first_name.upper()} {user.last_name.upper()} ({user.username}). \nMotivo: {comment}."""
         self.save()
 
-        if 0 < self.invoice.calculate_pending(1):
-            self.invoice.pending_payment = True
-            self.invoice.save()
+        if self.invoice.status:
+            if 0 < self.invoice.calculate_pending(1):
+                self.invoice.pending_payment = True
+                self.invoice.save()
 
     def formatCurrencyPayment(self):
         return locale.currency(self.amount, grouping=True)
