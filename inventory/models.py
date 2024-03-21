@@ -22,7 +22,7 @@ class Output(models.Model):
         if self.item.stock < 1 or self.quantity > self.item.stock:
             raise Exception("La cantidad que intenta descontar es mayor que el stock.")
         if self.item.is_service:
-            raise Exception("No se decuenta de stock cuando es un servicio.")
+            raise Exception("No se descuenta de stock cuando es un servicio.")
         else:
             self.item.stock = self.item.stock - self.quantity
             self.item.save()

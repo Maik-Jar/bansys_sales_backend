@@ -17,8 +17,8 @@ class SomeFieldItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Item
-        fields = ["id", "name"]
-        read_only_fields = ["name"]
+        fields = ["id", "name", "provider"]
+        read_only_fields = ["name", "provider"]
 
 
 class ItemsListSerializer(serializers.ModelSerializer):
