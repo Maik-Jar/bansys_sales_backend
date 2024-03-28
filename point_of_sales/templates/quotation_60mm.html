@@ -8,18 +8,20 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     {% tailwind_css %}
     <style>
-      @page {
-        size: 60mm;
-        margin: 0;
+      @media print {
+        @page {
+          size: 57mm;
+          margin: 0;
+        }
       }
     </style>
     <script language="javascript">
       document.onload = window.print();
     </script>
   </head>
-  <body>
+  <body class="bg-gray-200 print:bg-white">
     <div
-      class="bg-white border rounded-lg shadow-lg px-6 py-8 max-w-md mx-auto mt-8"
+      class="bg-white border rounded-lg shadow-lg print:shadow-none px-6 py-8 max-w-md mx-auto mt-8"
     >
       <div class="flex flex-col justify-items-center">
         <img
@@ -29,6 +31,7 @@
           height="50px"
           class="mx-auto"
         />
+        {% comment %}
         <h1 class="font-bold text-2xl mt-4 text-center text-gray-700">
           {{company.name|upper}}
         </h1>
@@ -39,6 +42,7 @@
           {{company.format_phone}}
         </p>
         <p class="text-center text-gray-700 mb-4">{{company.email}}</p>
+        {% endcomment %}
       </div>
       <hr class="mb-2" />
       <div class="flex justify-between mb-4">

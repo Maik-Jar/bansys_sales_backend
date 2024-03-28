@@ -10,26 +10,28 @@
     <title>Cotizacion {{header.number}}</title>
     {% tailwind_css %}
    <style>
-      @page {
-        size: A4;
-        margin: 0;
-      }
+        @media print {
+            @page {
+                size: A4;
+                margin: 0;
+            }
+        }
     </style>
   </head>
-  <body class="bg-gray-200">
+  <body class="bg-gray-200 print:bg-white">
     <div
-      class="text-gray-700 bg-white rounded-lg shadow-xl p-[70px] max-w-[850px] min-h-full mx-auto my-4"
+      class="text-gray-700 bg-white rounded-lg shadow-xl print:shadow-none p-[70px] max-w-[850px] min-h-full mx-auto my-4"
     >
       <div class="grid grid-cols-2 items-start mb-2">
         <div class="">
           <img
             src="{{ company.logo.url }}"
             alt="{{ company.name }}"
-            style="width: 50%; max-height: 60%"
+            style="width: 70%; max-height: 70%"
             />
-          <p class="text-md font-semibold uppercase">{{company.name|upper}}</p>
+          {% comment %} <p class="text-md font-semibold uppercase">{{company.name|upper}}</p>
           <p class="uppercase">rnc {{company.document_id}}</p>
-          <p class="">{{company.format_phone}}</p>
+          <p class="">{{company.format_phone}}</p> {% endcomment %}
         </div>
         <div class="text-end">
           <h1 class="text-3xl font-semibold capitalize">Cotización</h1>

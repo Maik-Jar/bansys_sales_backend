@@ -10,14 +10,16 @@
     <title>Factura {{header.number}}</title>
     {% tailwind_css %}
    <style>
-      @page {
-        size: 60mm;
-        margin: 0;
-      }
+    @media print {
+        @page {
+          size: 57mm;
+          margin: 0;
+        }
+    }
     </style>
   </head>
-  <body class="bg-gray-200">
-    <div class="bg-white border rounded-lg shadow-lg px-6 py-8 max-w-md mx-auto mt-8">
+  <body class="bg-gray-200 print:bg-white">
+    <div class="bg-white border rounded-lg shadow-lg print:shadow-none px-6 py-8 max-w-md mx-auto mt-8">
     <div class="flex flex-col justify-items-center">
         <img
           src="{{ company.logo.url }}"
