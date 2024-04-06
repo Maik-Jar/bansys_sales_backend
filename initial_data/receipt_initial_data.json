@@ -1,15 +1,15 @@
 [
     {
-        "model": "point_of_sales.receipt",
+        "model": "master_data.receipt",
         "pk": 1,
         "fields": {
             "name": "N/A",
             "serial": "N/A",
-            "init": 0,
+            "init": 1,
             "end": 0,
-            "expiration": "2024-12-31",
+            "expiration": "2026-12-31",
             "status": true,
-            "tax": 2
+            "tax": 1
         }
     }
 ]

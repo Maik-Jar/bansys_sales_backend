@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from rest_framework.reverse import reverse
 from .. import models
+import os
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -80,3 +82,10 @@ class SalesTypesReadSerializer(serializers.ModelSerializer):
         model = models.SaleType
         fields = "__all__"
         read_only_fields = ("id", "name", "status")
+
+
+class CompanyReadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Company
+        fields = "__all__"
+        read_only_fields = ("id",)

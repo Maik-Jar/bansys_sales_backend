@@ -1,6 +1,6 @@
 [
     {
-        "model": "point_of_sales.documenttype",
+        "model": "master_data.documenttype",
         "pk": 1,
         "fields": {
             "name": "N/A",
@@ -8,7 +8,7 @@
         }
     },
     {
-        "model": "point_of_sales.documenttype",
+        "model": "master_data.documenttype",
         "pk": 2,
         "fields": {
             "name": "CEDULA",
@@ -16,7 +16,7 @@
         }
     },
     {
-        "model": "point_of_sales.documenttype",
+        "model": "master_data.documenttype",
         "pk": 3,
         "fields": {
             "name": "PASAPORTE",
@@ -24,7 +24,7 @@
         }
     },
     {
-        "model": "point_of_sales.documenttype",
+        "model": "master_data.documenttype",
         "pk": 4,
         "fields": {
             "name": "RNC",

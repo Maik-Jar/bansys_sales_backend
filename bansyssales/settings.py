@@ -24,14 +24,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY", default="your secret key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-PRODUCTION = "PRODUCTION" not in os.environ
-DEBUG = True
+DEBUG = "PRODUCTION" not in os.environ
 
 ALLOWED_HOSTS = ["*"]
 
 # if not DEBUG:
 #     ALLOWED_HOSTS.append(os.environ.get("HOSTS"))
-
 
 # Application definition
 MY_APPS = [
@@ -144,13 +142,13 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 MEDIA_URL = "media/"
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
-if not PRODUCTION:
+if not DEBUG:
     DJANGO_SUPERUSER_PASSWORD = os.environ.get("DJANGO_SUPERUSER_PASSWORD")
 
 # Default primary key field type
@@ -158,7 +156,7 @@ if not PRODUCTION:
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-if not PRODUCTION:
+if not DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
 else:
     CORS_ALLOWED_ORIGINS = [
@@ -184,7 +182,10 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
-# if not PRODUCTION:
-NPM_BIN_PATH = "C:/Program Files/nodejs/npm.cmd"
+if DEBUG:
+    NPM_BIN_PATH = "C:/Program Files/nodejs/npm.cmd"
 
 # FIXME: REVISAR LA VARIBLE PRODUCCION EN EL settings.py
+
+if not DEBUG:
+    CSRF_TRUSTED_ORIGINS = ["http://localhost:8080"]

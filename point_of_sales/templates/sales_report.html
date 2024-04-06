@@ -1,0 +1,96 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script language="javascript"/>
+        document.onload = window.print();
+    </script>
+    <title>Reporte de ventas</title>
+    {% tailwind_css %}
+   <style>
+    @media print {
+        @page {
+            size: A4;
+            margin: 0;
+        }
+    }
+    </style>
+  </head>
+  <body class="bg-gray-200 print:bg-white">
+    <div
+      class="text-gray-700 bg-white rounded-lg shadow-xl print:shadow-none p-[70px] max-w-[850px] min-h-full mx-auto my-4"
+    >
+      <div class="grid grid-cols-2 items-start mb-2">
+        <div>
+          <img
+            src="{{ company.logo.url }}"
+            alt="{{ company.name }}"
+            style="width: 70%; max-height: 70%"
+            />
+        </div>
+        <div class="text-end">
+          <h1 class="text-3xl font-semibold capitalize">Reporte de ventas</h1>
+        </div>
+      </div>
+      <hr class="my-2" />
+      <div class="flex items-start justify-between pb-4 mb-4">
+        <div class="">
+          <h2 class="text-xl font-bold mb-4 capitalize">Información general</h2>
+          <div class="text-gray-700 capitalize font-semibold">vendedor:</div>
+          <p>{{user.first_name|upper}} {{user.last_name|upper}}</p>
+        </div>
+      </div>
+      <h1 class="text-xl font-semibold text-center mb-1">Ventas</h1>
+      <hr class="mb-4" />
+      <table class="w-full text-left mb-8">
+        <thead>
+          <tr>
+            <th class="text-sm text-gray-700 font-bold uppercase py-2 text-left">
+              No. Factura
+            </th>
+            <th class="text-sm text-gray-700 font-bold uppercase py-2 text-center">
+              Fecha
+            </th>
+            <th class="text-sm text-gray-700 font-bold uppercase py-2 text-center">
+              Estado
+            </th>
+            <th class="text-sm text-gray-700 font-bold uppercase py-2 text-center">
+              Venta
+            </th>
+            <th class="text-sm text-gray-700 font-bold uppercase py-2 text-center">
+              Total
+            </th>
+            <th class="text-sm text-gray-700 font-bold uppercase py-2 text-right">
+              Pago
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+            {% for detail in header %}
+                <tr>
+                    <td class="text-sm text-left py-2 text-gray-700">{{detail.number}}
+                    </td>
+                    <td class="text-sm text-center py-2 text-gray-700">{{detail.date_created|date:"d-m-Y h:i:s a"}}</td>
+                    <td class="text-sm text-center py-2 text-gray-700">{% if detail.status %}ACTIVO{%else%}INACTIVO{%endif%}</td>
+                    <td class="text-sm text-center py-2 text-gray-700">{{detail.sales_type.name}}</td>
+                    <td class="text-sm text-center font-semibold py-2 text-gray-700">{{detail.calculate_total_amount}}</td>
+                    <td class="text-sm text-right font-semibold py-2 text-gray-700">{{detail.calculate_total_payment}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+      </table>
+      <hr class="mb-4" />
+      <div class="mb-2">
+        {%for key, value in amounts.items%}
+            <div class="flex justify-between items-start mb-2">
+                {{key}}: {{value}}
+            </div>
+        {%endfor%}
+      </div>
+      <div class="pt-8 mb-8">
+      </div>
+    </div>
+  </body>
+</html>

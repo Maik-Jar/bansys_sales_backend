@@ -356,3 +356,13 @@ class PaymentMethodListAPIView(generics.ListAPIView):
     def get(self, request):
         serializer = self.serializer_class(self.queryset.filter(status=True), many=True)
         return Response(serializer.data)
+
+
+class CompanyListAPIView(generics.ListAPIView):
+    permission_classes = [permissions.AllowAny]
+    serializer_class = serializers.CompanyReadSerializer
+    queryset = models.Company.objects.all()
+
+    def get(self, request):
+        serializer = self.serializer_class(self.queryset.first())
+        return Response(serializer.data)

@@ -345,6 +345,38 @@ class InvoiceHeader(models.Model):
                 grouping=True,
             )
 
+    def calculate_total_payment(self, use=2):
+        # 1: internal, 2: external
+        if use == 1:
+            return (
+                reduce((lambda x, y: x + y.amount), self.payment.filter(status=True), 0)
+                if (
+                    reduce(
+                        (lambda x, y: x + y.amount), self.payment.filter(status=True), 0
+                    )
+                )
+                > 0
+                else 0
+            )
+        else:
+            return locale.currency(
+                (
+                    reduce(
+                        (lambda x, y: x + y.amount), self.payment.filter(status=True), 0
+                    )
+                    if (
+                        reduce(
+                            (lambda x, y: x + y.amount),
+                            self.payment.filter(status=True),
+                            0,
+                        )
+                    )
+                    > 0
+                    else 0
+                ),
+                grouping=True,
+            )
+
     def __str__(self) -> str:
         return f"{self.number} / {self.customer.name} / {self.calculate_total_amount()}"
 

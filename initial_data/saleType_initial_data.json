@@ -1,9 +1,41 @@
 [
     {
-        "model": "point_of_sales.saletype",
+        "model": "master_data.saletype",
         "pk": 1,
         "fields": {
             "name": "CONTADO",
+            "status": true
+        }
+    },
+    {
+        "model": "master_data.saletype",
+        "pk": 2,
+        "fields": {
+            "name": "CREDITO 15 DIAS",
+            "status": true
+        }
+    },
+    {
+        "model": "master_data.saletype",
+        "pk": 3,
+        "fields": {
+            "name": "CREDITO 30 DIAS",
+            "status": true
+        }
+    },
+    {
+        "model": "master_data.saletype",
+        "pk": 4,
+        "fields": {
+            "name": "CREDITO 60 DIAS",
+            "status": true
+        }
+    },
+    {
+        "model": "master_data.saletype",
+        "pk": 5,
+        "fields": {
+            "name": "CREDITO 90 DIAS",
             "status": true
         }
     }

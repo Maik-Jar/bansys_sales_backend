@@ -12,41 +12,47 @@ class Migration(migrations.Migration):
         ),
     ]
 
-    # operations = [
-    #     migrations.RemoveField(
-    #         model_name='customer',
-    #         name='document_type',
-    #     ),
-    #     migrations.RemoveField(
-    #         model_name='input',
-    #         name='item',
-    #     ),
-    #     migrations.RemoveField(
-    #         model_name='input',
-    #         name='provider',
-    #     ),
-    #     migrations.RemoveField(
-    #         model_name='item',
-    #         name='provider',
-    #     ),
-    #     migrations.RemoveField(
-    #         model_name='output',
-    #         name='item',
-    #     ),
-    #     migrations.RemoveField(
-    #         model_name='payment',
-    #         name='invoice',
-    #     ),
-    #     migrations.RemoveField(
-    #         model_name='payment',
-    #         name='payment_method',
-    #     ),
-    #     migrations.RemoveField(
-    #         model_name='provider',
-    #         name='document_type',
-    #     ),
-    #     migrations.RemoveField(
-    #         model_name='return',
-    #         name='item',
-    #     ),
-    # ]
+    operations = [
+        migrations.RemoveConstraint(
+            model_name="customer", name="unique_customer_document_type_and_id"
+        ),
+        migrations.RemoveConstraint(
+            model_name="provider", name="unique_provide_document_type_and_id"
+        ),
+        #     migrations.RemoveField(
+        #         model_name='customer',
+        #         name='document_type',
+        #     ),
+        #     migrations.RemoveField(
+        #         model_name='input',
+        #         name='item',
+        #     ),
+        #     migrations.RemoveField(
+        #         model_name='input',
+        #         name='provider',
+        #     ),
+        #     migrations.RemoveField(
+        #         model_name='item',
+        #         name='provider',
+        #     ),
+        #     migrations.RemoveField(
+        #         model_name='output',
+        #         name='item',
+        #     ),
+        #     migrations.RemoveField(
+        #         model_name='payment',
+        #         name='invoice',
+        #     ),
+        #     migrations.RemoveField(
+        #         model_name='payment',
+        #         name='payment_method',
+        #     ),
+        #     migrations.RemoveField(
+        #         model_name='provider',
+        #         name='document_type',
+        #     ),
+        #     migrations.RemoveField(
+        #         model_name='return',
+        #         name='item',
+        #     ),
+    ]

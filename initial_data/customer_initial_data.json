@@ -1,11 +1,11 @@
 [
     {
-        "model": "point_of_sales.customer",
+        "model": "customers.customer",
         "pk": 1,
         "fields": {
             "name": "CONTADO GENERAL",
             "document_type": 1,
-            "document_id": "00000000000",
+            "document_id": null,
             "email": null,
             "phone": "0000000000",
             "address": null
