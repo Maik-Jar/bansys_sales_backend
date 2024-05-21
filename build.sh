@@ -2,9 +2,9 @@
 # exit on error
 set -o errexit
 
-# pip install --upgrade pip
-# pip install -r requirements.txt
-# python manage.py collectstatic --no-input
+pip install --upgrade pip
+pip install -r requirements.txt
+python manage.py collectstatic --no-input
 python manage.py migrate
 python manage.py loaddata initial_data/documentType_initial_data.json 
 python manage.py loaddata initial_data/customer_initial_data.json 
