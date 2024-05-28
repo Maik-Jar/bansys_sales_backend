@@ -117,6 +117,29 @@ class InvoiceHeaderListAPIView(generics.ListAPIView):
         return self.get_paginated_response(self.paginate_queryset(serializer.data))
 
 
+class InvoicePrintListAPIView(generics.ListAPIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [
+        permissions.IsAuthenticated,
+        permissions.DjangoModelPermissions | permissions.IsAdminUser,
+    ]
+    serializer_class = serializers.InvoicePrintSerializer
+    queryset = models.InvoiceHeader.objects.all()
+
+    def get(self, request):
+        invoice_header_id = request.query_params.get("invoice_header_id", None)
+
+        if invoice_header_id:
+            try:
+                invoice_header = self.queryset.get(pk=invoice_header_id)
+                serializer = self.serializer_class(invoice_header)
+                return Response(serializer.data)
+            except models.InvoiceHeader.DoesNotExist as e:
+                return Response(f"{e}", status=status.HTTP_404_NOT_FOUND)
+
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
 class QuotationHeaderApiView(generics.GenericAPIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [
@@ -194,6 +217,29 @@ class QuotationHeaderApiView(generics.GenericAPIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response(f"{e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class QuotationPrintListAPIView(generics.ListAPIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [
+        permissions.IsAuthenticated,
+        permissions.DjangoModelPermissions | permissions.IsAdminUser,
+    ]
+    serializer_class = serializers.QuotationPrintSerializer
+    queryset = models.QuotationHeader.objects.all()
+
+    def get(self, request):
+        quotation_header_id = request.query_params.get("quotation_header_id", None)
+
+        if quotation_header_id:
+            try:
+                quotation_header = self.queryset.get(pk=quotation_header_id)
+                serializer = self.serializer_class(quotation_header)
+                return Response(serializer.data)
+            except models.QuotationHeader.DoesNotExist as e:
+                return Response(f"{e}", status=status.HTTP_404_NOT_FOUND)
+
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class CustomAuthToken(ObtainAuthToken):

@@ -5,8 +5,9 @@ from .. import models
 from master_data.api.serializers import (
     ReceiptReadSerializer,
     SomeFieldsReceiptSerializer,
+    UserSerializer,
 )
-from customers.api.serializers import CustomerSomeFieldsSerializer
+from customers.api.serializers import CustomerSomeFieldsSerializer, CustomerSerializer
 from products_and_services.api.serializers import SomeFieldItemSerializer
 from accounting.api.serializers import PaymentSerializer
 
@@ -327,7 +328,6 @@ class InvoiceHeaderSerializer(serializers.ModelSerializer):
 
                 instance.comment = validated_data.get("comment", instance.comment)
                 instance.discount = validated_data.get("discount", instance.discount)
-                instance.avance = validated_data.get("avance", instance.avance)
                 instance.sales_type = validated_data.get(
                     "sales_type", instance.sales_type
                 )
@@ -397,3 +397,42 @@ class InvoiceHeaderReadSerializer(serializers.ModelSerializer):
         data["total"] = instance.calculate_total_amount(1)
 
         return data
+
+
+class InvoicePrintSerializer(serializers.ModelSerializer):
+    invoice_detail = InvoiceDetailSerializer(read_only=True, many=True)
+    payment = PaymentSerializer(read_only=True, many=True)
+    customer = CustomerSerializer(read_only=True)
+    receipt_sequence = SequenceReceiptSerializer(read_only=True)
+    receipt = SomeFieldsReceiptSerializer(read_only=True)
+    user_created = UserSerializer(read_only=True)
+
+    class Meta:
+        model = models.InvoiceHeader
+        fields = "__all__"
+        read_only_fields = (
+            "id",
+            "number",
+            "user_created",
+            "user_updated",
+            "date_created",
+            "date_updated",
+        )
+
+
+class QuotationPrintSerializer(serializers.ModelSerializer):
+    quotation_detail = QuotationDetailSerializer(read_only=True, many=True)
+    customer = CustomerSerializer(read_only=True)
+    user_created = UserSerializer(read_only=True)
+
+    class Meta:
+        model = models.QuotationHeader
+        fields = "__all__"
+        read_only_fields = (
+            "id",
+            "number",
+            "user_created",
+            "user_updated",
+            "date_created",
+            "date_updated",
+        )
