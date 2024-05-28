@@ -10,6 +10,10 @@ dpkg-reconfigure --frontend=noninteractive locales
 pip install --upgrade pip
 pip install -r requirements.txt
 python manage.py collectstatic --no-input
+python manage.py migrate master_data
+python manage.py migrate customers
+python manage.py migrate purchases_and_providers
+python manage.py migrate products_and_services
 python manage.py migrate
 python manage.py loaddata initial_data/documentType_initial_data.json 
 python manage.py loaddata initial_data/customer_initial_data.json 
