@@ -152,12 +152,12 @@ class Migration(migrations.Migration):
             name='document_type',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='point_of_sales.documenttype'),
         ),
-        migrations.AddConstraint(
-            model_name='provider',
-            constraint=models.UniqueConstraint(fields=('document_type', 'document_id'), name='unique_provide_document_type_and_id'),
-        ),
-        migrations.AddConstraint(
-            model_name='customer',
-            constraint=models.UniqueConstraint(condition=models.Q(('document_id__isnull', False)), fields=('document_type', 'document_id'), name='unique_customer_document_type_and_id'),
-        ),
+        #migrations.AddConstraint(
+        #    model_name='provider',
+        #    constraint=models.UniqueConstraint(fields=('document_type', 'document_id'), name='unique_provide_document_type_and_id'),
+        #),
+        #migrations.AddConstraint(
+        #    model_name='customer',
+        #    constraint=models.UniqueConstraint(condition=models.Q(('document_id__isnull', False)), fields=('document_type', 'document_id'), name='unique_customer_document_type_and_id'),
+        #),
     ]
