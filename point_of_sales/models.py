@@ -6,9 +6,9 @@ from products_and_services.models import Item
 from django.utils import timezone
 from functools import reduce
 from sequences import Sequence, get_last_value
-import locale
+# import locale
 
-locale.setlocale(locale.LC_MONETARY, "es_DO.UTF-8")
+# locale.setlocale(locale.LC_MONETARY, "es_DO.UTF-8")
 
 
 def sequence_generated(name):
@@ -64,65 +64,65 @@ class QuotationHeader(models.Model):
         self.status = False
         self.save()
 
-    def calculate_subtotal(self, use=2):
-        # 1: internal, 2: external
-        if use == 1:
-            return reduce(
-                (lambda x, y: x + y.calculate_amount(1)), self.quotation_detail.all(), 0
-            )
-        else:
-            return locale.currency(
-                reduce(
-                    (lambda x, y: x + y.calculate_amount(1)),
-                    self.quotation_detail.all(),
-                    0,
-                ),
-                grouping=True,
-            )
+    # def calculate_subtotal(self, use=2):
+    #     # 1: internal, 2: external
+    #     if use == 1:
+    #         return reduce(
+    #             (lambda x, y: x + y.calculate_amount(1)), self.quotation_detail.all(), 0
+    #         )
+    #     else:
+    #         return locale.currency(
+    #             reduce(
+    #                 (lambda x, y: x + y.calculate_amount(1)),
+    #                 self.quotation_detail.all(),
+    #                 0,
+    #             ),
+    #             grouping=True,
+    #         )
 
-    def calculate_total_quantity(self):
-        return reduce((lambda x, y: x + y.quantity), self.quotation_detail.all(), 0)
+    # def calculate_total_quantity(self):
+    #     return reduce((lambda x, y: x + y.quantity), self.quotation_detail.all(), 0)
 
-    def calculate_total_discount(self, use=2):
-        if use == 1:
-            return (
-                self.calculate_subtotal(1) * self.discount
-                if 0 < self.discount < 1
-                else self.discount
-            )
-        else:
-            return locale.currency(
-                (
-                    self.calculate_subtotal(1) * self.discount
-                    if self.discount < 1
-                    else self.discount
-                ),
-                grouping=True,
-            )
+    # def calculate_total_discount(self, use=2):
+    #     if use == 1:
+    #         return (
+    #             self.calculate_subtotal(1) * self.discount
+    #             if 0 < self.discount < 1
+    #             else self.discount
+    #         )
+    #     else:
+    #         return locale.currency(
+    #             (
+    #                 self.calculate_subtotal(1) * self.discount
+    #                 if self.discount < 1
+    #                 else self.discount
+    #             ),
+    #             grouping=True,
+    #         )
 
-    def calculate_total_tax(self, use=2):
-        if use == 1:
-            return (self.calculate_subtotal(1) - self.calculate_total_discount(1)) * (
-                self.tax
-            )
-        else:
-            return locale.currency(
-                (self.calculate_subtotal(1) - self.calculate_total_discount(1))
-                * (self.tax),
-                grouping=True,
-            )
+    # def calculate_total_tax(self, use=2):
+    #     if use == 1:
+    #         return (self.calculate_subtotal(1) - self.calculate_total_discount(1)) * (
+    #             self.tax
+    #         )
+    #     else:
+    #         return locale.currency(
+    #             (self.calculate_subtotal(1) - self.calculate_total_discount(1))
+    #             * (self.tax),
+    #             grouping=True,
+    #         )
 
-    def calculate_total_amount(self, use=2):
-        if use == 1:
-            return (
-                self.calculate_subtotal(1) - self.calculate_total_discount(1)
-            ) + self.calculate_total_tax(1)
-        else:
-            return locale.currency(
-                (self.calculate_subtotal(1) - self.calculate_total_discount(1))
-                + self.calculate_total_tax(1),
-                grouping=True,
-            )
+    # def calculate_total_amount(self, use=2):
+    #     if use == 1:
+    #         return (
+    #             self.calculate_subtotal(1) - self.calculate_total_discount(1)
+    #         ) + self.calculate_total_tax(1)
+    #     else:
+    #         return locale.currency(
+    #             (self.calculate_subtotal(1) - self.calculate_total_discount(1))
+    #             + self.calculate_total_tax(1),
+    #             grouping=True,
+    #         )
 
     def __str__(self) -> str:
         return f"{self.id} / {self.customer.name}"
@@ -154,22 +154,22 @@ class QuotationDetail(models.Model):
         blank=True, null=True, max_length=4000, verbose_name="Descripcion"
     )
 
-    def calculate_discount(self):
-        if 0 < self.discount < 1:
-            return (self.price * self.quantity) * self.discount
-        return self.discount
+    # def calculate_discount(self):
+    #     if 0 < self.discount < 1:
+    #         return (self.price * self.quantity) * self.discount
+    #     return self.discount
 
-    def calculate_amount(self, use=2):
-        # 1: internal, 2: external
-        if use == 1:
-            return (self.price * self.quantity) - self.calculate_discount()
-        else:
-            return locale.currency(
-                (self.price * self.quantity) - self.calculate_discount(), grouping=True
-            )
+    # def calculate_amount(self, use=2):
+    #     # 1: internal, 2: external
+    #     if use == 1:
+    #         return (self.price * self.quantity) - self.calculate_discount()
+    #     else:
+    #         return locale.currency(
+    #             (self.price * self.quantity) - self.calculate_discount(), grouping=True
+    #         )
 
-    def format_price(self):
-        return locale.currency(self.price, grouping=True)
+    # def format_price(self):
+    #     return locale.currency(self.price, grouping=True)
 
     def __str__(self) -> str:
         return f"{self.quotation_header.id} / {self.id} / {self.item.name}"
@@ -247,135 +247,135 @@ class InvoiceHeader(models.Model):
             except:
                 return
 
-    def calculate_subtotal(self, use=2):
-        # 1: internal, 2: external
-        if use == 1:
-            return reduce(
-                (lambda x, y: x + y.calculate_amount(1)), self.invoice_detail.all(), 0
-            )
-        else:
-            return locale.currency(
-                reduce(
-                    (lambda x, y: x + y.calculate_amount(1)),
-                    self.invoice_detail.all(),
-                    0,
-                ),
-                grouping=True,
-            )
+    # def calculate_subtotal(self, use=2):
+    #     # 1: internal, 2: external
+    #     if use == 1:
+    #         return reduce(
+    #             (lambda x, y: x + y.calculate_amount(1)), self.invoice_detail.all(), 0
+    #         )
+    #     else:
+    #         return locale.currency(
+    #             reduce(
+    #                 (lambda x, y: x + y.calculate_amount(1)),
+    #                 self.invoice_detail.all(),
+    #                 0,
+    #             ),
+    #             grouping=True,
+    #         )
 
-    def calculate_total_quantity(self):
-        return reduce((lambda x, y: x + y.quantity), self.invoice_detail.all(), 0)
+    # def calculate_total_quantity(self):
+    #     return reduce((lambda x, y: x + y.quantity), self.invoice_detail.all(), 0)
 
-    def calculate_total_discount(self, use=2):
-        if use == 1:
-            return (
-                self.calculate_subtotal(1) * self.discount
-                if 0 < self.discount < 1
-                else self.discount
-            )
-        else:
-            return locale.currency(
-                (
-                    self.calculate_subtotal(1) * self.discount
-                    if self.discount < 1
-                    else self.discount
-                ),
-                grouping=True,
-            )
+    # def calculate_total_discount(self, use=2):
+    #     if use == 1:
+    #         return (
+    #             self.calculate_subtotal(1) * self.discount
+    #             if 0 < self.discount < 1
+    #             else self.discount
+    #         )
+    #     else:
+    #         return locale.currency(
+    #             (
+    #                 self.calculate_subtotal(1) * self.discount
+    #                 if self.discount < 1
+    #                 else self.discount
+    #             ),
+    #             grouping=True,
+    #         )
 
-    def calculate_total_tax(self, use=2):
-        if use == 1:
-            return (self.calculate_subtotal(1) - self.calculate_total_discount(1)) * (
-                self.tax
-            )
-        else:
-            return locale.currency(
-                (self.calculate_subtotal(1) - self.calculate_total_discount(1))
-                * (self.tax),
-                grouping=True,
-            )
+    # def calculate_total_tax(self, use=2):
+    #     if use == 1:
+    #         return (self.calculate_subtotal(1) - self.calculate_total_discount(1)) * (
+    #             self.tax
+    #         )
+    #     else:
+    #         return locale.currency(
+    #             (self.calculate_subtotal(1) - self.calculate_total_discount(1))
+    #             * (self.tax),
+    #             grouping=True,
+    #         )
 
-    def calculate_total_amount(self, use=2):
-        if use == 1:
-            return (
-                self.calculate_subtotal(1) - self.calculate_total_discount(1)
-            ) + self.calculate_total_tax(1)
-        else:
-            return locale.currency(
-                (self.calculate_subtotal(1) - self.calculate_total_discount(1))
-                + self.calculate_total_tax(1),
-                grouping=True,
-            )
+    # def calculate_total_amount(self, use=2):
+    #     if use == 1:
+    #         return (
+    #             self.calculate_subtotal(1) - self.calculate_total_discount(1)
+    #         ) + self.calculate_total_tax(1)
+    #     else:
+    #         return locale.currency(
+    #             (self.calculate_subtotal(1) - self.calculate_total_discount(1))
+    #             + self.calculate_total_tax(1),
+    #             grouping=True,
+    #         )
 
-    def calculate_pending(self, use=2):
-        # 1: internal, 2: external
-        if use == 1:
-            return (
-                self.calculate_total_amount(1)
-                - reduce(
-                    (lambda x, y: x + y.amount), self.payment.filter(status=True), 0
-                )
-                if (
-                    self.calculate_total_amount(1)
-                    - reduce(
-                        (lambda x, y: x + y.amount), self.payment.filter(status=True), 0
-                    )
-                )
-                > 0
-                else 0
-            )
-        else:
-            return locale.currency(
-                (
-                    self.calculate_total_amount(1)
-                    - reduce(
-                        (lambda x, y: x + y.amount), self.payment.filter(status=True), 0
-                    )
-                    if (
-                        self.calculate_total_amount(1)
-                        - reduce(
-                            (lambda x, y: x + y.amount),
-                            self.payment.filter(status=True),
-                            0,
-                        )
-                    )
-                    > 0
-                    else 0
-                ),
-                grouping=True,
-            )
+    # def calculate_pending(self, use=2):
+    #     # 1: internal, 2: external
+    #     if use == 1:
+    #         return (
+    #             self.calculate_total_amount(1)
+    #             - reduce(
+    #                 (lambda x, y: x + y.amount), self.payment.filter(status=True), 0
+    #             )
+    #             if (
+    #                 self.calculate_total_amount(1)
+    #                 - reduce(
+    #                     (lambda x, y: x + y.amount), self.payment.filter(status=True), 0
+    #                 )
+    #             )
+    #             > 0
+    #             else 0
+    #         )
+    #     else:
+    #         return locale.currency(
+    #             (
+    #                 self.calculate_total_amount(1)
+    #                 - reduce(
+    #                     (lambda x, y: x + y.amount), self.payment.filter(status=True), 0
+    #                 )
+    #                 if (
+    #                     self.calculate_total_amount(1)
+    #                     - reduce(
+    #                         (lambda x, y: x + y.amount),
+    #                         self.payment.filter(status=True),
+    #                         0,
+    #                     )
+    #                 )
+    #                 > 0
+    #                 else 0
+    #             ),
+    #             grouping=True,
+    #         )
 
-    def calculate_total_payment(self, use=2):
-        # 1: internal, 2: external
-        if use == 1:
-            return (
-                reduce((lambda x, y: x + y.amount), self.payment.filter(status=True), 0)
-                if (
-                    reduce(
-                        (lambda x, y: x + y.amount), self.payment.filter(status=True), 0
-                    )
-                )
-                > 0
-                else 0
-            )
-        else:
-            return locale.currency(
-                (
-                    reduce(
-                        (lambda x, y: x + y.amount), self.payment.filter(status=True), 0
-                    )
-                    if (
-                        reduce(
-                            (lambda x, y: x + y.amount),
-                            self.payment.filter(status=True),
-                            0,
-                        )
-                    )
-                    > 0
-                    else 0
-                ),
-                grouping=True,
-            )
+    # def calculate_total_payment(self, use=2):
+    #     # 1: internal, 2: external
+    #     if use == 1:
+    #         return (
+    #             reduce((lambda x, y: x + y.amount), self.payment.filter(status=True), 0)
+    #             if (
+    #                 reduce(
+    #                     (lambda x, y: x + y.amount), self.payment.filter(status=True), 0
+    #                 )
+    #             )
+    #             > 0
+    #             else 0
+    #         )
+    #     else:
+    #         return locale.currency(
+    #             (
+    #                 reduce(
+    #                     (lambda x, y: x + y.amount), self.payment.filter(status=True), 0
+    #                 )
+    #                 if (
+    #                     reduce(
+    #                         (lambda x, y: x + y.amount),
+    #                         self.payment.filter(status=True),
+    #                         0,
+    #                     )
+    #                 )
+    #                 > 0
+    #                 else 0
+    #             ),
+    #             grouping=True,
+    #         )
 
     def __str__(self) -> str:
         return f"{self.number} / {self.customer.name} / {self.calculate_total_amount()}"
@@ -408,22 +408,22 @@ class InvoiceDetail(models.Model):
     def inactivate(self):
         self.item.increase_stock(self.quantity)
 
-    def calculate_discount(self):
-        if 0 < self.discount < 1:
-            return (self.price * self.quantity) * self.discount
-        return self.discount
+    # def calculate_discount(self):
+    #     if 0 < self.discount < 1:
+    #         return (self.price * self.quantity) * self.discount
+    #     return self.discount
 
-    def calculate_amount(self, use=2):
-        # 1: internal, 2: external
-        if use == 1:
-            return (self.price * self.quantity) - self.calculate_discount()
-        else:
-            return locale.currency(
-                (self.price * self.quantity) - self.calculate_discount(), grouping=True
-            )
+    # def calculate_amount(self, use=2):
+    #     # 1: internal, 2: external
+    #     if use == 1:
+    #         return (self.price * self.quantity) - self.calculate_discount()
+    #     else:
+    #         return locale.currency(
+    #             (self.price * self.quantity) - self.calculate_discount(), grouping=True
+    #         )
 
-    def format_price(self):
-        return locale.currency(self.price, grouping=True)
+    # def format_price(self):
+    #     return locale.currency(self.price, grouping=True)
 
     def __str__(self) -> str:
         return f"{self.invoice_header.id} / {self.id} / {self.item.name}"

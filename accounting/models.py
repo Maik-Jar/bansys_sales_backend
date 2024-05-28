@@ -3,10 +3,11 @@ from django.contrib.auth.models import User
 from master_data.models import PaymentMethod
 from point_of_sales.models import InvoiceHeader
 from customers.models import Customer
-import locale
+
+# import locale
 
 # Create your models here.
-locale.setlocale(locale.LC_MONETARY, "es_DO.UTF-8")
+# locale.setlocale(locale.LC_MONETARY, "es_DO.UTF-8")
 
 
 class Payment(models.Model):
@@ -56,8 +57,8 @@ class Payment(models.Model):
                 self.invoice.pending_payment = True
                 self.invoice.save()
 
-    def formatCurrencyPayment(self):
-        return locale.currency(self.amount, grouping=True)
+    # def formatCurrencyPayment(self):
+    #     return locale.currency(self.amount, grouping=True)
 
     def save(self, *args, **kwargs) -> None:
         if not self.id:
