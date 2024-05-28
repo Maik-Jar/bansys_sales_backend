@@ -23,7 +23,6 @@ class InvoiceHeaderAdmin(admin.ModelAdmin):
         "number",
         "customer",
         "receipt_sequence",
-        "calculate_total_amount",
         "status",
     )
 
