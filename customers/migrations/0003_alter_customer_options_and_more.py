@@ -17,8 +17,8 @@ class Migration(migrations.Migration):
         #     name="customer",
         #     options={},
         # ),
-        migrations.RemoveConstraint(
-            model_name="customer",
-            name="unique_customer_document_type_and_id",
-        ),
+        # migrations.RemoveConstraint(
+        #    model_name="customer",
+        #    name="unique_customer_document_type_and_id",
+        #),
     ]
