@@ -2,11 +2,6 @@
 # exit on error
 set -o errexit
 
-apt-get update && \
-apt-get install -y locales && \
-sed -i -e 's/# es_DO.UTF-8 UTF-8/es_DO.UTF-8 UTF-8/' /etc/locale.gen && \
-dpkg-reconfigure --frontend=noninteractive locales
-
 pip install --upgrade pip
 pip install -r requirements.txt
 python manage.py collectstatic --no-input
