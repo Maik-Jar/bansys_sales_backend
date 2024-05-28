@@ -30,8 +30,8 @@ class Migration(migrations.Migration):
                 'verbose_name_plural': 'Proveedores',
             },
         ),
-        migrations.AddConstraint(
-            model_name='provider',
-            constraint=models.UniqueConstraint(fields=('document_type', 'document_id'), name='unique_provide_document_type_and_id'),
-        ),
+        #migrations.AddConstraint(
+        #    model_name='provider',
+        #    constraint=models.UniqueConstraint(fields=('document_type', 'document_id'), name='unique_provide_document_type_and_id'),
+        #),
     ]
