@@ -13,12 +13,12 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveConstraint(
-            model_name="customer", name="unique_customer_document_type_and_id"
-        ),
-        migrations.RemoveConstraint(
-            model_name="provider", name="unique_provide_document_type_and_id"
-        ),
+        #migrations.RemoveConstraint(
+        #    model_name="customer", name="unique_customer_document_type_and_id"
+        #),
+        #migrations.RemoveConstraint(
+        #    model_name="provider", name="unique_provide_document_type_and_id"
+        #),
         #     migrations.RemoveField(
         #         model_name='customer',
         #         name='document_type',
