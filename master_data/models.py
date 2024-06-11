@@ -144,3 +144,20 @@ class Receipt(models.Model):
     class Meta:
         verbose_name = "Comprobante"
         verbose_name_plural = "Comprobantes"
+
+
+class Condition(models.Model):
+    name = models.CharField(max_length=20)
+    description = models.CharField(max_length=200)
+    status = models.BooleanField(default=True)
+
+    def __str__(self) -> str:
+        return self.name
+
+    def save(self, *args, **kwargs):
+        self.name = self.name.upper()
+        return super().save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = "Condición"
+        verbose_name_plural = "Condiciones"

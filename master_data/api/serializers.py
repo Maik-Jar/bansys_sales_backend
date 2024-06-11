@@ -1,8 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from rest_framework.reverse import reverse
 from .. import models
-import os
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -89,3 +87,17 @@ class CompanyReadSerializer(serializers.ModelSerializer):
         model = models.Company
         fields = "__all__"
         read_only_fields = ("id",)
+
+
+class ConditionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Condition
+        fields = "__all__"
+        read_only_fields = ("id",)
+
+
+class ConditionReadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Condition
+        fields = "__all__"
+        read_only_fields = ("id", "name", "description", "status")

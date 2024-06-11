@@ -366,3 +366,74 @@ class CompanyListAPIView(generics.ListAPIView):
     def get(self, request):
         serializer = self.serializer_class(self.queryset.first())
         return Response(serializer.data)
+
+
+class ConditionAPIView(generics.GenericAPIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [
+        permissions.IsAuthenticated,
+        permissions.DjangoModelPermissions | permissions.IsAdminUser,
+    ]
+    serializer_class = serializers.ConditionSerializer
+    queryset = models.Condition.objects.all()
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ["name"]
+
+    def get(self, request):
+        condition_id = request.query_params.get("condition_id", None)
+
+        if condition_id:
+            try:
+                condition = self.queryset.get(pk=condition_id)
+                serializer = self.serializer_class(condition)
+                return Response(serializer.data)
+            except models.Condition.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+
+        conditions_list = self.queryset.all()
+        serializer = self.serializer_class(conditions_list, many=True)
+        return self.get_paginated_response(self.paginate_queryset(serializer.data))
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        try:
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(f"{e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def put(self, request):
+        condition_id = request.query_params.get("condition_id", None)
+
+        if condition_id is None:
+            return Response(
+                "Debe suministrar el condition_id",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            condition = self.queryset.get(pk=condition_id)
+            serializer = self.serializer_class(condition, data=request.data)
+
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except models.Condition.DoesNotExist as e:
+            return Response(f"{e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return Response(f"{e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ConditionListAPIView(generics.ListAPIView):
+    permission_classes = [permissions.AllowAny]
+    serializer_class = serializers.ConditionReadSerializer
+    queryset = models.Condition.objects.all()
+
+    def get(self, request):
+        serializer = self.serializer_class(self.queryset.filter(status=True), many=True)
+        return Response(serializer.data)

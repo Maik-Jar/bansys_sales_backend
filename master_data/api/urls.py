@@ -11,6 +11,8 @@ from .api import (
     PaymentMethodAPIView,
     PaymentMethodListAPIView,
     CompanyListAPIView,
+    ConditionAPIView,
+    ConditionListAPIView,
 )
 
 urlpatterns = [
@@ -34,4 +36,6 @@ urlpatterns = [
         "api/company_list",
         CompanyListAPIView.as_view(),
     ),
+    path("api/conditions", ConditionAPIView.as_view()),
+    path("api/conditions_list", ConditionListAPIView.as_view()),
 ]
