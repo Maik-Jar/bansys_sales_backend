@@ -42,6 +42,7 @@ MY_APPS = [
     "accounting",
     "products_and_services",
     "purchases_and_providers",
+    "authentication",
 ]
 
 DJANGO_APPS = [
@@ -170,6 +171,7 @@ else:
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.DjangoModelPermissions",
@@ -177,6 +179,10 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 30,
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
+}
+
+SIMPLE_JWT = {
+    "TOKEN_OBTAIN_SERIALIZER": "authentication.api.serializers.CustomTokenObtainPairSerializer",
 }
 
 TAILWIND_APP_NAME = "theme"

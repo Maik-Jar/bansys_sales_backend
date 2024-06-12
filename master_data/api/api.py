@@ -1,5 +1,6 @@
 from rest_framework import permissions, filters, generics, status
 from rest_framework.authentication import TokenAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response import Response
 from .. import models
 from . import serializers
@@ -67,7 +68,8 @@ class DocumentTypeAPIView(generics.GenericAPIView):
 
 
 class DocumentTypeListAPIView(generics.ListAPIView):
-    permission_classes = [permissions.AllowAny]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated | permissions.IsAdminUser]
     serializer_class = serializers.DocumentTypeSerializer
     queryset = models.DocumentType.objects.all()
 
@@ -137,7 +139,8 @@ class TaxAPIView(generics.GenericAPIView):
 
 
 class TaxListAPIView(generics.ListAPIView):
-    permission_classes = [permissions.AllowAny]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated | permissions.IsAdminUser]
     serializer_class = serializers.TaxSerializer
     queryset = models.Tax.objects.all()
 
@@ -208,7 +211,8 @@ class ReceiptAPIView(generics.GenericAPIView):
 
 
 class ReceiptListAPIView(generics.ListAPIView):
-    permission_classes = [permissions.AllowAny]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated | permissions.IsAdminUser]
     serializer_class = serializers.ReceiptReadSerializer
     queryset = models.Receipt.objects.all()
 
@@ -278,7 +282,8 @@ class SalesTypeAPIView(generics.GenericAPIView):
 
 
 class SalesTypeListAPIView(generics.ListAPIView):
-    permission_classes = [permissions.AllowAny]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated | permissions.IsAdminUser]
     serializer_class = serializers.SalesTypesReadSerializer
     queryset = models.SaleType.objects.all()
 
@@ -349,7 +354,8 @@ class PaymentMethodAPIView(generics.GenericAPIView):
 
 
 class PaymentMethodListAPIView(generics.ListAPIView):
-    permission_classes = [permissions.AllowAny]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated | permissions.IsAdminUser]
     serializer_class = serializers.PaymentMethodReadSerializer
     queryset = models.PaymentMethod.objects.all()
 
@@ -359,7 +365,8 @@ class PaymentMethodListAPIView(generics.ListAPIView):
 
 
 class CompanyListAPIView(generics.ListAPIView):
-    permission_classes = [permissions.AllowAny]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated | permissions.IsAdminUser]
     serializer_class = serializers.CompanyReadSerializer
     queryset = models.Company.objects.all()
 
@@ -430,7 +437,8 @@ class ConditionAPIView(generics.GenericAPIView):
 
 
 class ConditionListAPIView(generics.ListAPIView):
-    permission_classes = [permissions.AllowAny]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated | permissions.IsAdminUser]
     serializer_class = serializers.ConditionReadSerializer
     queryset = models.Condition.objects.all()
 
