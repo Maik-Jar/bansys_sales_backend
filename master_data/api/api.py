@@ -7,7 +7,7 @@ from . import serializers
 
 
 class DocumentTypeAPIView(generics.GenericAPIView):
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [
         permissions.IsAuthenticated,
         permissions.DjangoModelPermissions | permissions.IsAdminUser,
